@@ -2,6 +2,9 @@
 // Receives {selection, context} from content script over a Port,
 // fans out to all enabled providers in parallel, streams tokens back as
 // {type:"chunk", provider, text} and {type:"done"|"error", provider, ...}.
+// API keys live encrypted-at-rest in the vault (see vault.js).
+
+importScripts("vault.js");
 
 const PROVIDERS = {
   claude: {
@@ -42,11 +45,12 @@ chrome.runtime.onConnect.addListener((port) => {
   port.onMessage.addListener(async (msg) => {
     if (msg.type !== "lookup") return;
     const { selection, context, promptOverride } = msg;
-    const keys = await chrome.storage.sync.get(null);
+    const flags = await chrome.storage.sync.get(null); // non-secret toggles
+    const secrets = await vaultGetAll(); // decrypted only in worker memory
     const prompt = promptOverride || buildPrompt(selection, context);
 
     const enabled = Object.entries(PROVIDERS).filter(
-      ([id, p]) => keys[p.keyName] && keys[`${id}Enabled`] !== false
+      ([id, p]) => secrets[p.keyName] && flags[`${id}Enabled`] !== false
     );
 
     if (enabled.length === 0) {
@@ -61,7 +65,7 @@ chrome.runtime.onConnect.addListener((port) => {
 
     enabled.forEach(([id, p]) => {
       const t0 = performance.now();
-      p.stream(prompt, keys[p.keyName], p.model, (text) =>
+      p.stream(prompt, secrets[p.keyName], p.model, (text) =>
         safePost(port, { type: "chunk", provider: id, text })
       )
         .then(() =>
@@ -173,6 +177,22 @@ async function readSSE(res, onData) {
     }
   }
 }
+
+// ---------- Onboarding ----------
+
+// First install (or update from the plaintext-storage version): migrate any
+// legacy plaintext keys into the encrypted vault, then open settings if the
+// user has no keys yet so the setup flow prompts for them.
+chrome.runtime.onInstalled.addListener(async () => {
+  await migrateLegacyKeys();
+  const stored = await vaultStatus();
+  if (stored.length === 0) chrome.runtime.openOptionsPage();
+});
+
+// Content script's "no keys" card asks us to open the settings page.
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg?.type === "open-options") chrome.runtime.openOptionsPage();
+});
 
 // Keyboard shortcut — tell the active tab to trigger lookup on selection
 chrome.commands?.onCommand.addListener(async (command) => {

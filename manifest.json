@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Lookup for LLMs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Highlight any text, get instant answers from multiple LLMs in a macOS Lookup-style card.",
   "permissions": ["storage", "activeTab"],
   "host_permissions": [

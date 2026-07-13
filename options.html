@@ -2,76 +2,131 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>Lookup for LLMs — settings</title>
+<title>Lookup for LLMs — setup</title>
 <style>
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: #fafaf8; color: #1a1a1a;
-    margin: 0; padding: 24px; width: 360px;
+    margin: 0; padding: 24px; width: 400px;
   }
   h1 { font-size: 15px; font-weight: 500; margin: 0 0 4px; }
-  .sub { font-size: 12px; color: #999; margin: 0 0 20px; }
+  .sub { font-size: 12px; color: #999; margin: 0 0 16px; }
+  .steps {
+    font-size: 12px; color: #666; line-height: 1.7;
+    margin: 0 0 20px; padding-left: 18px;
+  }
+  .steps strong { color: #1a1a1a; font-weight: 500; }
   .row { margin-bottom: 16px; }
-  .row-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .row-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   label { font-size: 13px; font-weight: 500; }
+  .chip {
+    font-size: 10px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(0,0,0,0.06); color: #888; margin-right: auto;
+  }
+  .chip.ok { background: #e7f0dc; color: #3b6d11; }
+  .krow { display: flex; gap: 6px; }
   input[type="password"] {
-    width: 100%; box-sizing: border-box; font: inherit; font-size: 13px;
+    flex: 1; box-sizing: border-box; font: inherit; font-size: 13px;
     padding: 8px 10px; border-radius: 8px;
     border: 0.5px solid rgba(0,0,0,0.22); background: #fff;
   }
   input[type="password"]:focus { outline: none; border-color: rgba(0,0,0,0.45); }
-  .hint { font-size: 11px; color: #999; margin-top: 4px; }
-  button {
+  .mini {
+    font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 8px;
+    border: 0.5px solid rgba(0,0,0,0.22); background: transparent;
+    color: #1a1a1a; cursor: pointer;
+  }
+  .mini:hover { background: rgba(0,0,0,0.04); }
+  .mini.ok { color: #3b6d11; border-color: #3b6d11; }
+  .mini.bad { color: #a32d2d; border-color: #a32d2d; }
+  #save {
     font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 8px;
     border: 0.5px solid #1a1a1a; background: #1a1a1a; color: #fff; cursor: pointer;
   }
-  button:active { transform: scale(0.98); }
+  #save:active { transform: scale(0.98); }
   .saved { font-size: 12px; color: #3b6d11; margin-left: 10px; opacity: 0; transition: opacity 0.2s; }
   .saved.show { opacity: 1; }
   .warn {
-    font-size: 11px; color: #854f0b; background: #faeeda;
+    font-size: 11px; color: #555; background: #f1f1ec;
     border-radius: 8px; padding: 8px 10px; margin-top: 18px; line-height: 1.5;
   }
+  .warn strong { font-weight: 600; }
   @media (prefers-color-scheme: dark) {
     body { background: #1f1f1d; color: #ececea; }
+    .steps { color: #b8b8b4; }
+    .steps strong { color: #ececea; }
+    .chip { background: rgba(255,255,255,0.08); color: #a8a8a4; }
+    .chip.ok { background: #2c3d1c; color: #a4d46e; }
     input[type="password"] { background: #262624; color: #ececea; border-color: rgba(255,255,255,0.25); }
-    button { background: #ececea; color: #1a1a1a; border-color: #ececea; }
-    .warn { background: #41310e; color: #fac775; }
+    .mini { border-color: rgba(255,255,255,0.25); color: #ececea; }
+    .mini:hover { background: rgba(255,255,255,0.06); }
+    .mini.ok { color: #a4d46e; border-color: #a4d46e; }
+    .mini.bad { color: #f09595; border-color: #f09595; }
+    #save { background: #ececea; color: #1a1a1a; border-color: #ececea; }
+    .warn { background: #292926; color: #b8b8b4; }
   }
 </style>
 </head>
 <body>
-  <h1>Lookup for LLMs</h1>
-  <p class="sub">Bring your own API keys. Stored via chrome.storage.sync.</p>
+  <h1>Lookup for LLMs — setup</h1>
+  <p class="sub">Bring your own API keys. One key is enough to start.</p>
+
+  <ol class="steps">
+    <li><strong>Paste a key</strong> for any provider below.</li>
+    <li><strong>Test</strong> it, then <strong>Save</strong> — keys are encrypted before they touch disk.</li>
+    <li><strong>Highlight text</strong> on any page (or press ⌘⇧L) to look it up.</li>
+  </ol>
 
   <div class="row">
     <div class="row-head">
       <label for="anthropicKey">Claude</label>
-      <input type="checkbox" id="claudeEnabled" checked />
+      <span class="chip" data-for="anthropicKey">not set</span>
+      <input type="checkbox" id="claudeEnabled" checked title="Enable Claude" />
     </div>
-    <input type="password" id="anthropicKey" placeholder="sk-ant-…" />
+    <div class="krow">
+      <input type="password" id="anthropicKey" data-ph="sk-ant-…" placeholder="sk-ant-…" autocomplete="off" />
+      <button class="mini test" data-for="anthropicKey">Test</button>
+      <button class="mini remove" data-for="anthropicKey" style="display:none" title="Delete saved key">✕</button>
+    </div>
   </div>
 
   <div class="row">
     <div class="row-head">
       <label for="openaiKey">GPT-4o</label>
-      <input type="checkbox" id="gptEnabled" checked />
+      <span class="chip" data-for="openaiKey">not set</span>
+      <input type="checkbox" id="gptEnabled" checked title="Enable GPT-4o" />
     </div>
-    <input type="password" id="openaiKey" placeholder="sk-…" />
+    <div class="krow">
+      <input type="password" id="openaiKey" data-ph="sk-…" placeholder="sk-…" autocomplete="off" />
+      <button class="mini test" data-for="openaiKey">Test</button>
+      <button class="mini remove" data-for="openaiKey" style="display:none" title="Delete saved key">✕</button>
+    </div>
   </div>
 
   <div class="row">
     <div class="row-head">
       <label for="geminiKey">Gemini</label>
-      <input type="checkbox" id="geminiEnabled" checked />
+      <span class="chip" data-for="geminiKey">not set</span>
+      <input type="checkbox" id="geminiEnabled" checked title="Enable Gemini" />
     </div>
-    <input type="password" id="geminiKey" placeholder="AIza…" />
+    <div class="krow">
+      <input type="password" id="geminiKey" data-ph="AIza…" placeholder="AIza…" autocomplete="off" />
+      <button class="mini test" data-for="geminiKey">Test</button>
+      <button class="mini remove" data-for="geminiKey" style="display:none" title="Delete saved key">✕</button>
+    </div>
   </div>
 
-  <button id="save">Save</button><span class="saved" id="saved">Saved</span>
+  <button id="save">Save</button><span class="saved" id="saved">Saved — encrypted</span>
 
-  <p class="warn">Keys live in your browser profile and are sent only to each provider's API. Anthropic requires the direct-browser-access header (already set); OpenAI and Google allow extension-origin calls with your own key.</p>
+  <p class="warn">
+    <strong>How your keys are protected:</strong> in flight, every request uses HTTPS/TLS
+    and keys are sent only to the provider they belong to. At rest, keys are encrypted with
+    AES-GCM-256 before storage; the master key is a non-extractable browser key whose raw
+    bytes are never exposed to JavaScript. Keys stay on this device (never synced in
+    plaintext). No browser extension can protect keys from malware running on your OS.
+  </p>
 
+  <script src="vault.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

@@ -1,0 +1,36 @@
+version: '3'
+
+vars:
+  PORT: '8931'
+  # Pinned so `setup` and `preview` always use the same browser build.
+  PLAYWRIGHT: 'playwright@1.61.1'
+
+tasks:
+  setup:
+    desc: Download the Playwright Chromium build (one-time, idempotent)
+    cmds:
+      - npx -y {{.PLAYWRIGHT}} install chromium
+
+  preview:
+    desc: Serve the UI preview harness on localhost and open it in an interactive Playwright browser
+    deps: [setup]
+    cmds:
+      - |
+        # clear any stale server left on the port by a previous run
+        # (task's built-in shell has no usable $!, so we manage the server by port)
+        lsof -ti :{{.PORT}} | xargs kill 2>/dev/null || true
+        python3 -m http.server {{.PORT}} --bind 127.0.0.1 >/dev/null 2>&1 &
+        # wait until the server actually responds before opening the browser
+        ok=""
+        for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25; do
+          if curl -sf -o /dev/null http://127.0.0.1:{{.PORT}}/preview.html; then ok=1; break; fi
+          sleep 0.2
+        done
+        if [ -z "$ok" ]; then
+          echo "error: preview server failed to start on port {{.PORT}}" >&2
+          lsof -ti :{{.PORT}} | xargs kill 2>/dev/null || true
+          exit 1
+        fi
+        echo "Preview harness: http://127.0.0.1:{{.PORT}}/preview.html — close the browser window to stop."
+        npx -y {{.PLAYWRIGHT}} open http://127.0.0.1:{{.PORT}}/preview.html || true
+        lsof -ti :{{.PORT}} | xargs kill 2>/dev/null || true

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Lookup for LLMs — UI preview harness</title>
+<style>
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    max-width: 640px; margin: 0 auto; padding: 48px 24px 240px;
+    line-height: 1.7; font-size: 17px; color: #1a1a1a; background: #fdfdfb;
+  }
+  .harness {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px; background: #eef4fb; border: 1px solid #c8dcf2;
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 32px; color: #2a4a6b;
+  }
+  h1 { font-size: 26px; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #191917; color: #e8e8e4; }
+    .harness { background: #1d2836; border-color: #2c405a; color: #a8c4e0; }
+  }
+</style>
+</head>
+<body>
+  <div class="harness">
+    <strong>Preview harness</strong> — chrome.* APIs are stubbed; responses are fake streams.
+    Highlight any word or phrase below to open the card. Gemini is scripted to respond first
+    (wins the default tab), then Claude, then GPT-4o. Try the pills, Compare all, Follow up, Copy, Esc.
+  </div>
+
+  <h1>The Voynich Manuscript</h1>
+  <p>
+    The Voynich manuscript is an illustrated codex written in an otherwise unknown script,
+    referred to as Voynichese. The vellum on which it is written has been carbon-dated to the
+    early fifteenth century, and stylistic analysis suggests it may have been composed in Italy
+    during the Renaissance.
+  </p>
+  <p>
+    Many hypotheses about its meaning have been proposed: an undeciphered natural language, an
+    elaborate cipher, a constructed language, or simply a hoax designed to defraud a wealthy
+    collector. Statistical analysis shows the text follows Zipf's law, a property of natural
+    languages that is difficult to fake, which keeps cryptographers returning to it.
+  </p>
+  <p>
+    The manuscript's botanical illustrations depict plants that match no known species, and its
+    astronomical diagrams include zodiac symbols alongside inscrutable circular charts. It now
+    resides in Yale University's Beinecke Rare Book &amp; Manuscript Library.
+  </p>
+
+  <script>
+    // ---- chrome.* stub: must load BEFORE content.js ----
+    const ANSWERS = {
+      claude:
+        "In this passage, Voynichese names the unique writing system of the Voynich manuscript — a script found nowhere else and never deciphered. It is the manuscript's defining mystery rather than a known language.",
+      gpt:
+        "Voynichese refers to the unknown script used in the Voynich manuscript. Despite a century of cryptographic effort, no one has established whether it encodes a real language, a cipher, or nothing at all.",
+      gemini:
+        "Voynichese is the informal name for the manuscript's unidentified script. Its statistical regularities resemble natural language, which is why the text is often treated as more than a simple hoax.",
+    };
+    const FOLLOWUP = {
+      claude:
+        "Scripted follow-up answer from Claude: the stub echoes your question back through the same streaming path the real extension uses.",
+      gpt: "Scripted follow-up answer from GPT-4o: same fake stream, different provider timing.",
+      gemini: "Scripted follow-up answer from Gemini: fastest again in this harness.",
+    };
+    const START_DELAY = { gemini: 350, claude: 700, gpt: 1000 }; // gemini wins first tab
+    const CHUNK_MS = 40;
+
+    window.chrome = {
+      runtime: {
+        onMessage: { addListener() {} },
+        sendMessage(msg) { console.log("[stub] sendMessage", msg); },
+        connect() {
+          const listeners = [];
+          let dead = false;
+          const emit = (m) => { if (!dead) listeners.forEach((f) => f(m)); };
+          return {
+            onMessage: { addListener: (fn) => listeners.push(fn) },
+            disconnect() { dead = true; },
+            postMessage(msg) {
+              if (msg.type !== "lookup") return;
+              const bank = msg.promptOverride ? FOLLOWUP : ANSWERS;
+              const providers = [
+                { id: "claude", label: "Claude" },
+                { id: "gpt", label: "GPT-4o" },
+                { id: "gemini", label: "Gemini" },
+              ];
+              setTimeout(() => emit({ type: "providers", providers }), 60);
+              for (const p of providers) {
+                const words = bank[p.id].split(" ");
+                words.forEach((w, i) =>
+                  setTimeout(
+                    () => emit({ type: "chunk", provider: p.id, text: (i ? " " : "") + w }),
+                    START_DELAY[p.id] + i * CHUNK_MS
+                  )
+                );
+                const doneAt = START_DELAY[p.id] + words.length * CHUNK_MS + 60;
+                setTimeout(
+                  () => emit({ type: "done", provider: p.id, ms: Math.round(doneAt) }),
+                  doneAt
+                );
+              }
+            },
+          };
+        },
+      },
+    };
+  </script>
+  <script src="content.js"></script>
+</body>
+</html>
