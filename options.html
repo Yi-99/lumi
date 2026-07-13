@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Lookup for LLMs — settings</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #fafaf8; color: #1a1a1a;
+    margin: 0; padding: 24px; width: 360px;
+  }
+  h1 { font-size: 15px; font-weight: 500; margin: 0 0 4px; }
+  .sub { font-size: 12px; color: #999; margin: 0 0 20px; }
+  .row { margin-bottom: 16px; }
+  .row-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  label { font-size: 13px; font-weight: 500; }
+  input[type="password"] {
+    width: 100%; box-sizing: border-box; font: inherit; font-size: 13px;
+    padding: 8px 10px; border-radius: 8px;
+    border: 0.5px solid rgba(0,0,0,0.22); background: #fff;
+  }
+  input[type="password"]:focus { outline: none; border-color: rgba(0,0,0,0.45); }
+  .hint { font-size: 11px; color: #999; margin-top: 4px; }
+  button {
+    font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 8px;
+    border: 0.5px solid #1a1a1a; background: #1a1a1a; color: #fff; cursor: pointer;
+  }
+  button:active { transform: scale(0.98); }
+  .saved { font-size: 12px; color: #3b6d11; margin-left: 10px; opacity: 0; transition: opacity 0.2s; }
+  .saved.show { opacity: 1; }
+  .warn {
+    font-size: 11px; color: #854f0b; background: #faeeda;
+    border-radius: 8px; padding: 8px 10px; margin-top: 18px; line-height: 1.5;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #1f1f1d; color: #ececea; }
+    input[type="password"] { background: #262624; color: #ececea; border-color: rgba(255,255,255,0.25); }
+    button { background: #ececea; color: #1a1a1a; border-color: #ececea; }
+    .warn { background: #41310e; color: #fac775; }
+  }
+</style>
+</head>
+<body>
+  <h1>Lookup for LLMs</h1>
+  <p class="sub">Bring your own API keys. Stored via chrome.storage.sync.</p>
+
+  <div class="row">
+    <div class="row-head">
+      <label for="anthropicKey">Claude</label>
+      <input type="checkbox" id="claudeEnabled" checked />
+    </div>
+    <input type="password" id="anthropicKey" placeholder="sk-ant-…" />
+  </div>
+
+  <div class="row">
+    <div class="row-head">
+      <label for="openaiKey">GPT-4o</label>
+      <input type="checkbox" id="gptEnabled" checked />
+    </div>
+    <input type="password" id="openaiKey" placeholder="sk-…" />
+  </div>
+
+  <div class="row">
+    <div class="row-head">
+      <label for="geminiKey">Gemini</label>
+      <input type="checkbox" id="geminiEnabled" checked />
+    </div>
+    <input type="password" id="geminiKey" placeholder="AIza…" />
+  </div>
+
+  <button id="save">Save</button><span class="saved" id="saved">Saved</span>
+
+  <p class="warn">Keys live in your browser profile and are sent only to each provider's API. Anthropic requires the direct-browser-access header (already set); OpenAI and Google allow extension-origin calls with your own key.</p>
+
+  <script src="options.js"></script>
+</body>
+</html>

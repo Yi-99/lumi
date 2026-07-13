@@ -1,0 +1,182 @@
+// background.js — MV3 service worker
+// Receives {selection, context} from content script over a Port,
+// fans out to all enabled providers in parallel, streams tokens back as
+// {type:"chunk", provider, text} and {type:"done"|"error", provider, ...}.
+
+const PROVIDERS = {
+  claude: {
+    label: "Claude",
+    stream: streamAnthropic,
+    keyName: "anthropicKey",
+    model: "claude-sonnet-4-6",
+  },
+  gpt: {
+    label: "GPT-4o",
+    stream: streamOpenAI,
+    keyName: "openaiKey",
+    model: "gpt-4o-mini",
+  },
+  gemini: {
+    label: "Gemini",
+    stream: streamGemini,
+    keyName: "geminiKey",
+    model: "gemini-2.0-flash",
+  },
+};
+
+function buildPrompt(selection, context) {
+  return [
+    `Define or explain the following selected text in 2-3 sentences, plainly and precisely.`,
+    `Use the surrounding passage to disambiguate meaning; explain it *in this context*, not generically.`,
+    ``,
+    `Selected text: "${selection}"`,
+    ``,
+    `Surrounding passage:`,
+    `"""${context}"""`,
+  ].join("\n");
+}
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name !== "lookup") return;
+
+  port.onMessage.addListener(async (msg) => {
+    if (msg.type !== "lookup") return;
+    const { selection, context, promptOverride } = msg;
+    const keys = await chrome.storage.sync.get(null);
+    const prompt = promptOverride || buildPrompt(selection, context);
+
+    const enabled = Object.entries(PROVIDERS).filter(
+      ([id, p]) => keys[p.keyName] && keys[`${id}Enabled`] !== false
+    );
+
+    if (enabled.length === 0) {
+      safePost(port, { type: "no-keys" });
+      return;
+    }
+
+    safePost(port, {
+      type: "providers",
+      providers: enabled.map(([id, p]) => ({ id, label: p.label })),
+    });
+
+    enabled.forEach(([id, p]) => {
+      const t0 = performance.now();
+      p.stream(prompt, keys[p.keyName], p.model, (text) =>
+        safePost(port, { type: "chunk", provider: id, text })
+      )
+        .then(() =>
+          safePost(port, {
+            type: "done",
+            provider: id,
+            ms: Math.round(performance.now() - t0),
+          })
+        )
+        .catch((err) =>
+          safePost(port, { type: "error", provider: id, message: String(err) })
+        );
+    });
+  });
+});
+
+function safePost(port, msg) {
+  try {
+    port.postMessage(msg);
+  } catch (_) {
+    /* port closed (card dismissed) — drop silently */
+  }
+}
+
+// ---------- Provider adapters (all SSE streaming) ----------
+
+async function streamAnthropic(prompt, key, model, onChunk) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": key,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 300,
+      stream: true,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Anthropic ${res.status}`);
+  await readSSE(res, (data) => {
+    if (data.type === "content_block_delta" && data.delta?.text)
+      onChunk(data.delta.text);
+  });
+}
+
+async function streamOpenAI(prompt, key, model, onChunk) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${key}`,
+    },
+    body: JSON.stringify({
+      model,
+      stream: true,
+      max_tokens: 300,
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!res.ok) throw new Error(`OpenAI ${res.status}`);
+  await readSSE(res, (data) => {
+    const t = data.choices?.[0]?.delta?.content;
+    if (t) onChunk(t);
+  });
+}
+
+async function streamGemini(prompt, key, model, onChunk) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${key}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 300 },
+    }),
+  });
+  if (!res.ok) throw new Error(`Gemini ${res.status}`);
+  await readSSE(res, (data) => {
+    const t = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (t) onChunk(t);
+  });
+}
+
+// Shared SSE reader: parses "data: {...}" lines from a streaming fetch body.
+async function readSSE(res, onData) {
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split("\n");
+    buf = lines.pop();
+    for (const line of lines) {
+      const s = line.trim();
+      if (!s.startsWith("data:")) continue;
+      const payload = s.slice(5).trim();
+      if (payload === "[DONE]") return;
+      try {
+        onData(JSON.parse(payload));
+      } catch (_) {
+        /* partial/keepalive line */
+      }
+    }
+  }
+}
+
+// Keyboard shortcut — tell the active tab to trigger lookup on selection
+chrome.commands?.onCommand.addListener(async (command) => {
+  if (command !== "trigger-lookup") return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.id) chrome.tabs.sendMessage(tab.id, { type: "trigger-lookup" });
+});
