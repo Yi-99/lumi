@@ -57,6 +57,16 @@
   }
   select:focus { outline: none; border-color: rgba(0,0,0,0.45); }
   .theme-row { display: flex; align-items: center; justify-content: space-between; }
+  .usage { font-size: 12px; }
+  .usage .urow {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 5px 0; border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  }
+  .usage .urow:last-child { border-bottom: none; }
+  .usage .uname { font-weight: 500; width: 64px; flex: none; }
+  .usage .unums { color: #666; }
+  .usage .ulook { margin-left: auto; color: #999; }
+  .usage .uempty { color: #999; padding: 4px 0; }
 
   /* Dark palette. The .dark class is resolved by options.js from the saved
      theme ("system" tracks prefers-color-scheme live). */
@@ -73,6 +83,9 @@
   :root.dark #save { background: #ececea; color: #1a1a1a; border-color: #ececea; }
   :root.dark .warn { background: #292926; color: #b8b8b4; }
   :root.dark select { background: #262624; color: #ececea; border-color: rgba(255,255,255,0.25); }
+  :root.dark .usage .urow { border-color: rgba(255,255,255,0.08); }
+  :root.dark .usage .unums { color: #b8b8b4; }
+  :root.dark .usage .ulook, :root.dark .usage .uempty { color: #8a8a86; }
 </style>
 </head>
 <body>
@@ -139,6 +152,15 @@
       <option value="light">Light</option>
       <option value="dark">Dark</option>
     </select>
+  </div>
+
+  <div class="row">
+    <div class="row-head">
+      <label>Token usage</label>
+      <span class="chip" style="margin-right:0">this browser</span>
+      <button class="mini" id="resetUsage" title="Zero all counters">Reset</button>
+    </div>
+    <div id="usageList" class="usage"></div>
   </div>
 
   <button id="save">Save</button><span class="saved" id="saved">Saved — encrypted</span>

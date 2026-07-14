@@ -64,6 +64,8 @@ Click the extension icon (or open its options page) and paste a key for at least
 | GPT-4o (`gpt-4o-mini`) | `sk-…` | [platform.openai.com](https://platform.openai.com/api-keys) |
 | Gemini (`gemini-2.0-flash`) | `AIza…` | [aistudio.google.com](https://aistudio.google.com/apikey) |
 
+The settings page also shows **per-provider token usage** (input/output tokens and lookup count, parsed from each provider's own streaming usage reports) with a reset button — so you can see what each key is costing you.
+
 Untick a provider's checkbox to disable it without deleting the key. Keys are encrypted at rest with AES-GCM-256 (non-extractable WebCrypto master key, see [extension/vault.js](extension/vault.js)), stay on this device, and are sent **only** to each provider's official API endpoint — or, if you enable it, through the optional local proxy below.
 
 ## Optional local proxy server

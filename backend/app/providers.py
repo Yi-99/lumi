@@ -1,9 +1,13 @@
 """Streaming provider adapters.
 
-Each adapter is an async generator yielding text deltas. Keys are passed in
-headers only (never URLs) so they cannot leak into exception strings or
-access logs. Non-200 responses raise with the status code only — provider
-response bodies can echo request details and are never included.
+Each adapter is an async generator yielding events:
+  {"text": str}                          — a content delta
+  {"usage": {"input": int, "output": int}} — final token counts (at most once)
+
+Keys are passed in headers only (never URLs) so they cannot leak into
+exception strings or access logs. Non-200 responses raise with the status
+code only — provider response bodies can echo request details and are never
+included.
 """
 
 import json
@@ -55,11 +59,22 @@ async def stream_anthropic(
     ) as resp:
         if resp.status_code != 200:
             raise Exception(f"Anthropic {resp.status_code}")
+        # input tokens arrive on message_start, cumulative output on message_delta
+        usage = {"input": 0, "output": 0}
         async for data in _sse_data_lines(resp):
             if data.get("type") == "content_block_delta":
                 text = (data.get("delta") or {}).get("text")
                 if text:
-                    yield text
+                    yield {"text": text}
+            elif data.get("type") == "message_start":
+                usage["input"] = ((data.get("message") or {}).get("usage") or {}).get(
+                    "input_tokens", 0
+                )
+            elif data.get("type") == "message_delta":
+                usage["output"] = (data.get("usage") or {}).get(
+                    "output_tokens", usage["output"]
+                )
+        yield {"usage": usage}
 
 
 async def stream_openai(
@@ -76,16 +91,22 @@ async def stream_openai(
             "model": model,
             "stream": True,
             "max_tokens": max_tokens,
+            "stream_options": {"include_usage": True},  # final chunk carries usage
             "messages": [{"role": "user", "content": prompt}],
         },
     ) as resp:
         if resp.status_code != 200:
             raise Exception(f"OpenAI {resp.status_code}")
+        usage = {"input": 0, "output": 0}
         async for data in _sse_data_lines(resp):
             choices = data.get("choices") or []
             text = (choices[0].get("delta") or {}).get("content") if choices else None
             if text:
-                yield text
+                yield {"text": text}
+            if data.get("usage"):
+                usage["input"] = data["usage"].get("prompt_tokens", 0)
+                usage["output"] = data["usage"].get("completion_tokens", 0)
+        yield {"usage": usage}
 
 
 async def stream_gemini(
@@ -105,12 +126,19 @@ async def stream_gemini(
     ) as resp:
         if resp.status_code != 200:
             raise Exception(f"Gemini {resp.status_code}")
+        # every chunk carries usageMetadata; the last one has final counts
+        usage = {"input": 0, "output": 0}
         async for data in _sse_data_lines(resp):
             candidates = data.get("candidates") or []
             parts = ((candidates[0].get("content") or {}).get("parts") or []) if candidates else []
             text = parts[0].get("text") if parts else None
             if text:
-                yield text
+                yield {"text": text}
+            meta = data.get("usageMetadata")
+            if meta:
+                usage["input"] = meta.get("promptTokenCount", 0)
+                usage["output"] = meta.get("candidatesTokenCount", 0)
+        yield {"usage": usage}
 
 
 ADAPTERS = {

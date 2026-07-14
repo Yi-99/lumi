@@ -24,7 +24,48 @@ async function refresh() {
   document.getElementById("proxyUrl").value = flags.proxyUrl || "";
   document.getElementById("theme").value = flags.theme || "system";
   applyPageTheme(flags.theme || "system");
+  await renderUsage();
 }
+
+// ---------- Token usage (accumulated by background.js per lookup) ----------
+
+const USAGE_LABELS = { claude: "Claude", gpt: "GPT-4o", gemini: "Gemini" };
+
+function fmtTokens(v) {
+  const n = Number(v) || 0; // storage is extension-written; coerce anyway
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "k";
+  return String(n);
+}
+
+async function renderUsage() {
+  const { usage = {} } = await chrome.storage.local.get("usage");
+  const list = document.getElementById("usageList");
+  const rows = Object.keys(USAGE_LABELS)
+    .filter((id) => usage[id])
+    .map((id) => {
+      const u = usage[id];
+      const lookups = Number(u.lookups) || 0;
+      return `<div class="urow">
+        <span class="uname">${USAGE_LABELS[id]}</span>
+        <span class="unums">${fmtTokens(u.input)} in · ${fmtTokens(u.output)} out</span>
+        <span class="ulook">${lookups} lookup${lookups === 1 ? "" : "s"}</span>
+      </div>`;
+    });
+  list.innerHTML = rows.length
+    ? rows.join("")
+    : `<div class="uempty">No lookups yet — counts appear after your first query.</div>`;
+}
+
+// Live-refresh while the page is open (lookups can finish in the background)
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.usage) renderUsage();
+});
+
+document.getElementById("resetUsage").addEventListener("click", async () => {
+  await chrome.storage.local.set({ usage: {} });
+  await renderUsage();
+});
 
 // ---------- Theme (shared with the lookup card via chrome.storage.sync) ----------
 

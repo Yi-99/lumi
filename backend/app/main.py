@@ -77,8 +77,13 @@ async def fanout(client: httpx.AsyncClient, body: LookupRequest, keys: dict[str,
         t0 = time.monotonic()
         try:
             adapter = ADAPTERS[spec.id]
-            async for text in adapter(client, body.prompt, keys[spec.id], spec.model, body.max_tokens):
-                await q.put({"type": "chunk", "provider": spec.id, "text": text})
+            async for ev in adapter(client, body.prompt, keys[spec.id], spec.model, body.max_tokens):
+                if "text" in ev:
+                    await q.put({"type": "chunk", "provider": spec.id, "text": ev["text"]})
+                elif "usage" in ev:
+                    # Token accounting — the extension records this event and
+                    # doesn't forward it to the card UI.
+                    await q.put({"type": "usage", "provider": spec.id, **ev["usage"]})
             await q.put(
                 {"type": "done", "provider": spec.id, "ms": int((time.monotonic() - t0) * 1000)}
             )

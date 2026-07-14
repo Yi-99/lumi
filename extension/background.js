@@ -84,17 +84,39 @@ function runDirect(enabled, prompt, secrets, port) {
     p.stream(prompt, secrets[p.keyName], p.model, (text) =>
       safePost(port, { type: "chunk", provider: id, text })
     )
-      .then(() =>
+      .then((usage) => {
+        if (usage) recordUsage(id, usage);
         safePost(port, {
           type: "done",
           provider: id,
           ms: Math.round(performance.now() - t0),
-        })
-      )
+        });
+      })
       .catch((err) =>
         safePost(port, { type: "error", provider: id, message: String(err) })
       );
   });
+}
+
+// ---------- Token-usage accounting (shown on the settings page) ----------
+// Accumulated per provider in chrome.storage.local. Writes are serialized
+// through a promise chain — three providers finishing at once would
+// otherwise race the read-modify-write.
+let usageWrites = Promise.resolve();
+function recordUsage(provider, { input = 0, output = 0 }) {
+  usageWrites = usageWrites
+    .then(async () => {
+      const { usage = {} } = await chrome.storage.local.get("usage");
+      const u = usage[provider] || { input: 0, output: 0, lookups: 0 };
+      usage[provider] = {
+        input: u.input + input,
+        output: u.output + output,
+        lookups: u.lookups + 1,
+      };
+      await chrome.storage.local.set({ usage });
+    })
+    .catch(() => {});
+  return usageWrites;
 }
 
 // Route the whole lookup through the proxy: one POST, one SSE stream whose
@@ -123,6 +145,11 @@ async function runProxy(proxyUrl, prompt, enabled, secrets, port) {
   // before their done/error arrives, so pills don't spin forever.
   const settled = new Set();
   await readSSE(res, (data) => {
+    if (data.type === "usage") {
+      // Server-side usage accounting event — record, don't forward to the UI.
+      recordUsage(data.provider, data);
+      return;
+    }
     if (data.type === "done" || data.type === "error") settled.add(data.provider);
     safePost(port, data);
   });
@@ -158,10 +185,17 @@ async function streamAnthropic(prompt, key, model, onChunk) {
     }),
   });
   if (!res.ok) throw new Error(`Anthropic ${res.status}`);
+  // Usage: input arrives on message_start, output (cumulative) on message_delta.
+  const usage = { input: 0, output: 0 };
   await readSSE(res, (data) => {
     if (data.type === "content_block_delta" && data.delta?.text)
       onChunk(data.delta.text);
+    if (data.type === "message_start")
+      usage.input = data.message?.usage?.input_tokens || 0;
+    if (data.type === "message_delta" && data.usage?.output_tokens)
+      usage.output = data.usage.output_tokens;
   });
+  return usage;
 }
 
 async function streamOpenAI(prompt, key, model, onChunk) {
@@ -175,14 +209,21 @@ async function streamOpenAI(prompt, key, model, onChunk) {
       model,
       stream: true,
       max_tokens: 300,
+      stream_options: { include_usage: true }, // final chunk carries usage
       messages: [{ role: "user", content: prompt }],
     }),
   });
   if (!res.ok) throw new Error(`OpenAI ${res.status}`);
+  const usage = { input: 0, output: 0 };
   await readSSE(res, (data) => {
     const t = data.choices?.[0]?.delta?.content;
     if (t) onChunk(t);
+    if (data.usage) {
+      usage.input = data.usage.prompt_tokens || 0;
+      usage.output = data.usage.completion_tokens || 0;
+    }
   });
+  return usage;
 }
 
 async function streamGemini(prompt, key, model, onChunk) {
@@ -196,10 +237,17 @@ async function streamGemini(prompt, key, model, onChunk) {
     }),
   });
   if (!res.ok) throw new Error(`Gemini ${res.status}`);
+  // Usage: every chunk carries usageMetadata; the last one has final counts.
+  const usage = { input: 0, output: 0 };
   await readSSE(res, (data) => {
     const t = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (t) onChunk(t);
+    if (data.usageMetadata) {
+      usage.input = data.usageMetadata.promptTokenCount || 0;
+      usage.output = data.usageMetadata.candidatesTokenCount || 0;
+    }
   });
+  return usage;
 }
 
 // Shared SSE reader: parses "data: {...}" lines from a streaming fetch body.
