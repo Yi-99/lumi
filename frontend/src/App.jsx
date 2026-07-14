@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
+import ProgressBar from './components/ProgressBar.jsx'
 import Home from './pages/Home.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
@@ -29,6 +30,7 @@ function App() {
   return (
     <div className="flex min-h-svh flex-col">
       <ScrollManager />
+      <ProgressBar />
       <Navbar />
       <main className="flex-1">
         <Routes>

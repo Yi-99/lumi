@@ -1,0 +1,149 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - link "LUMI" [ref=e6] [cursor=pointer]:
+        - /url: /
+      - navigation "Main" [ref=e8]:
+        - link "Features" [ref=e9] [cursor=pointer]:
+          - /url: /#features
+        - link "How it works" [ref=e10] [cursor=pointer]:
+          - /url: /#how
+        - link "History" [ref=e11] [cursor=pointer]:
+          - /url: /#history
+        - link "FAQ" [ref=e12] [cursor=pointer]:
+          - /url: /#faq
+      - link "Open app →" [ref=e14] [cursor=pointer]:
+        - /url: https://github.com/Yi-99/lumi
+  - main [ref=e15]:
+    - generic [ref=e17]:
+      - generic [ref=e18]: AI dictionary · Est. 2026
+      - heading "EVERY WORD, ANSWERED." [level=1] [ref=e19]: EVERYWORD,ANSWERED.
+      - generic [ref=e20]:
+        - paragraph [ref=e21]: Lumi defines any word the moment you meet it — then lets you ask AI anything that follows. Reading shouldn’t stop for a dictionary.
+        - generic [ref=e22]:
+          - link "DEFINE A WORD ↗" [ref=e23] [cursor=pointer]:
+            - /url: "#demo"
+          - link "SEE HOW" [ref=e24] [cursor=pointer]:
+            - /url: "#how"
+    - generic [ref=e26]:
+      - generic [ref=e27]: DEFINE✦
+      - generic [ref=e28]: ASK FOLLOW-UPS✦
+      - generic [ref=e29]: SAVE EVERYTHING✦
+      - generic [ref=e30]: READ WITHOUT STOPPING✦
+      - generic [ref=e31]: DEFINE✦
+      - generic [ref=e32]: ASK FOLLOW-UPS✦
+      - generic [ref=e33]: SAVE EVERYTHING✦
+      - generic [ref=e34]: READ WITHOUT STOPPING✦
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e40]: lumin·ous
+        - generic [ref=e41]: /ˈluːmɪnəs/ · adjective
+      - paragraph [ref=e42]: "Emitting or reflecting light; radiant. Also: intellectually brilliant, illuminating."
+      - generic [ref=e43]:
+        - button "Use it in a sentence" [ref=e44]
+        - button "Etymology?" [ref=e45]
+        - button "Simpler, please" [ref=e46]
+        - button "Antonyms" [ref=e47]
+      - generic [ref=e48]: "> you asked: antonyms> lumi: dim · dull · murky · obscure — words for light, and for prose, that fail to glow."
+    - generic [ref=e50]:
+      - generic [ref=e51]: § What Lumi does
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]: "01"
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - generic [ref=e57]: Instant definitions
+              - paragraph [ref=e58]: Highlight anything, anywhere. Lumi returns a clear, contextual meaning — not a wall of dictionary jargon.
+            - generic [ref=e59]: →
+        - generic [ref=e60]:
+          - generic [ref=e61]: "02"
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - generic [ref=e64]: Ask AI follow-ups
+              - paragraph [ref=e65]: “Where does it come from?” “Give me an antonym.” Keep a real conversation going until it truly clicks.
+            - generic [ref=e66]: →
+        - generic [ref=e67]:
+          - generic [ref=e68]: "03"
+          - generic [ref=e69]:
+            - generic [ref=e70]:
+              - generic [ref=e71]: Every lookup, saved
+              - paragraph [ref=e72]: A searchable history of every prompt and word — your personal, ever-growing vocabulary.
+            - generic [ref=e73]: →
+    - generic [ref=e75]:
+      - generic [ref=e76]: § How it works
+      - heading "THREE STEPS. ZERO FRICTION." [level=2] [ref=e77]: THREE STEPS.ZERO FRICTION.
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - generic [ref=e80]: STEP 01
+          - generic [ref=e81]: ↯
+          - generic [ref=e82]: Highlight a word
+          - paragraph [ref=e83]: Anywhere you read — Lumi's cursor is always one tap away.
+        - generic [ref=e84]:
+          - generic [ref=e85]: STEP 02
+          - generic [ref=e86]: ✦
+          - generic [ref=e87]: Read the meaning
+          - paragraph [ref=e88]: A crisp definition appears instantly, tuned to the sentence you're in.
+        - generic [ref=e89]:
+          - generic [ref=e90]: STEP 03
+          - generic [ref=e91]: ∞
+          - generic [ref=e92]: Ask anything more
+          - paragraph [ref=e93]: Follow the thread with AI, then find it again in your saved history.
+    - generic [ref=e95]:
+      - generic [ref=e96]:
+        - generic [ref=e97]: 0.4s
+        - generic [ref=e98]: avg. lookup speed
+      - generic [ref=e99]:
+        - generic [ref=e100]: ∞
+        - generic [ref=e101]: follow-up questions
+      - generic [ref=e102]:
+        - generic [ref=e103]: 100%
+        - generic [ref=e104]: of it, remembered
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - generic [ref=e108]: § History
+        - heading "A DIARY OF EVERYTHING YOU LOOKED UP." [level=2] [ref=e109]
+        - paragraph [ref=e110]: Scroll back through weeks of curiosity. Re-open any thread and keep asking — nothing you learn slips away.
+        - generic [ref=e111]:
+          - generic [ref=e112]: luminous
+          - generic [ref=e113]: ephemeral
+          - generic [ref=e114]: serendipity
+          - generic [ref=e115]: + 214 more
+      - img "Lumi history panel showing a saved lookup thread" [ref=e117]
+    - generic [ref=e119]:
+      - generic [ref=e120]: § Questions
+      - generic [ref=e121]:
+        - generic [ref=e123] [cursor=pointer]:
+          - button "Where can I use Lumi? +" [ref=e124]:
+            - generic [ref=e125]: Where can I use Lumi?
+            - generic [ref=e126]: +
+          - paragraph [ref=e127]: Anywhere you read on your device — articles, PDFs, books, the web. Highlight a word and Lumi's definition appears without leaving the page.
+        - generic [ref=e129] [cursor=pointer]:
+          - button "How is this different from a normal dictionary? +" [ref=e130]:
+            - generic [ref=e131]: How is this different from a normal dictionary?
+            - generic [ref=e132]: +
+          - paragraph [ref=e133]: A dictionary gives you one fixed entry. Lumi reads the sentence around the word, explains it in context, and then answers whatever you ask next in plain language.
+        - generic [ref=e135] [cursor=pointer]:
+          - button "What kind of follow-ups can I ask? +" [ref=e136]:
+            - generic [ref=e137]: What kind of follow-ups can I ask?
+            - generic [ref=e138]: +
+          - paragraph [ref=e139]: Anything — etymology, simpler phrasing, antonyms, an example sentence, or how the meaning shifts in a specific context. It's a real conversation, not a lookup.
+        - generic [ref=e141] [cursor=pointer]:
+          - button "Is my history private? +" [ref=e161]:
+            - generic [ref=e143]: Is my history private?
+            - generic [ref=e144]: +
+          - paragraph [ref=e145]: Yes. Your saved words and prompts are yours alone, searchable only by you, and never used to identify you.
+    - generic [ref=e146]:
+      - generic [ref=e147]: STARTLOOKING UP.
+      - paragraph [ref=e148]: Free to start. Every word you meet, understood in a breath.
+      - link "GET LUMI FREE ↗" [ref=e150] [cursor=pointer]:
+        - /url: https://github.com/Yi-99/lumi
+  - contentinfo [ref=e151]:
+    - generic [ref=e152]: LUMI●
+    - generic [ref=e153]: AI dictionary · © 2026
+    - generic [ref=e154]:
+      - link "Privacy" [ref=e155] [cursor=pointer]:
+        - /url: /privacy
+      - link "Terms" [ref=e156] [cursor=pointer]:
+        - /url: /terms
+      - link "Contact" [ref=e157] [cursor=pointer]:
+        - /url: https://github.com/Yi-99/lumi/issues

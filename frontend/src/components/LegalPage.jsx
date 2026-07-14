@@ -1,22 +1,27 @@
-// Shared shell for the legal pages: a paper document floating in the night,
-// set in the serif "page you're reading" voice.
+// Shared shell for the legal pages, in the site's brutalist voice:
+// a white bordered sheet on bone, mono metadata, hairline rules.
 function LegalPage({ title, updated, children }) {
   return (
-    <section className="px-4 pt-36 pb-24">
-      <div className="mx-auto max-w-3xl">
-        <article className="rounded-2xl border border-white/10 bg-paper px-6 py-10 shadow-2xl shadow-night-950/60 sm:px-12 sm:py-14">
-          <header className="mb-10 border-b border-ink/10 pb-8">
-            <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+    <section className="px-5 pt-32 pb-24 sm:px-10">
+      <div className="mx-auto max-w-[880px]">
+        <article className="border border-black bg-white px-6 py-10 sm:px-12 sm:py-14">
+          <header className="mb-10 border-b border-black pb-8">
+            <p className="m-0 mb-4 font-mono text-xs tracking-[0.28em] uppercase">
+              § Legal
+            </p>
+            <h1 className="font-display m-0 text-[clamp(34px,5vw,56px)] leading-[0.94] tracking-[-0.03em] uppercase">
               {title}
             </h1>
-            <p className="mt-3 font-sans text-sm text-neutral-500">Last updated: {updated}</p>
+            <p className="mt-4 mb-0 font-mono text-[13px] text-[#555]">
+              Last updated: {updated}
+            </p>
           </header>
           <div
-            className="space-y-8 font-serif text-lg leading-relaxed text-ink/85
-              [&_a]:text-amber-700 [&_a]:underline [&_a]:underline-offset-2
-              [&_code]:rounded [&_code]:bg-ink/5 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.8em]
-              [&_h2]:font-display [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-ink
-              [&_li]:mt-2 [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:pl-6"
+            className="space-y-8 text-[17px] leading-[1.6] text-ink/90
+              [&_a]:underline [&_a]:underline-offset-2 [&_a]:transition-opacity [&_a]:hover:opacity-60
+              [&_code]:bg-black/5 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[0.85em]
+              [&_h2]:mt-0 [&_h2]:border-t [&_h2]:border-black [&_h2]:pt-6 [&_h2]:text-xl [&_h2]:font-extrabold [&_h2]:tracking-[-0.01em]
+              [&_li]:mt-2 [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:list-['—__'] [&_ul]:pl-6"
           >
             {children}
           </div>
