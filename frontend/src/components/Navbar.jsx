@@ -39,14 +39,12 @@ function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <a
-            href="https://github.com/Yi-99/lumi"
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            to="/settings"
             className="hidden bg-black px-5 py-2.5 font-mono text-xs tracking-[0.1em] text-white uppercase transition-transform duration-200 hover:-translate-y-0.5 sm:inline-block"
           >
             Open app →
-          </a>
+          </Link>
           <button
             type="button"
             className="border border-black p-2 md:hidden"
@@ -80,14 +78,13 @@ function Navbar() {
               {label}
             </Link>
           ))}
-          <a
-            href="https://github.com/Yi-99/lumi"
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            to="/settings"
             className="bg-black px-5 py-3.5 text-white"
+            onClick={() => setOpen(false)}
           >
             Open app →
-          </a>
+          </Link>
         </nav>
       )}
     </header>

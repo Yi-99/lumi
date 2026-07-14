@@ -6,6 +6,7 @@ import ProgressBar from './components/ProgressBar.jsx'
 import Home from './pages/Home.jsx'
 import Privacy from './pages/Privacy.jsx'
 import Terms from './pages/Terms.jsx'
+import Settings from './pages/Settings.jsx'
 
 // Scrolls to top on route change, or to the anchor when the URL has a hash
 // (so "Features" works from /privacy as well as from /).
@@ -27,6 +28,21 @@ function ScrollManager() {
 }
 
 function App() {
+  // /settings ships its own chrome (sticky topbar, themed surface) — the
+  // landing navbar, progress bar, and footer stay off it.
+  const isSettings = useLocation().pathname === '/settings'
+
+  if (isSettings) {
+    return (
+      <>
+        <ScrollManager />
+        <Routes>
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </>
+    )
+  }
+
   return (
     <div className="flex min-h-svh flex-col">
       <ScrollManager />

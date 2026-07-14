@@ -58,6 +58,63 @@ body {
   background: var(--color-bone);
 }
 
+/* Settings page theme scope — the design ships its own light/dark token set,
+   isolated here so the brutalist landing tokens stay untouched. */
+.settings-scope {
+  --bg: #f6f5f3;
+  --bgt: rgba(246, 245, 243, 0.85);
+  --card: #ffffff;
+  --border: #eae8e4;
+  --text: #1a1a1a;
+  --muted: #7c7973;
+  --faint: #9a978f;
+  --subtle: #a5a29d;
+  --hoverbg: #eeece8;
+  --field: #f7f6f4;
+  --divider: #eeedeb;
+  --chipborder: #dad8d3;
+  --chiptext: #5c5952;
+  --ink: #111111;
+  --inktext: #ffffff;
+  --track: #dad8d3;
+  --dotoff: #c8c6c0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+.settings-scope[data-theme='dark'] {
+  --bg: #131312;
+  --bgt: rgba(19, 19, 18, 0.85);
+  --card: #1d1d1b;
+  --border: #2d2d2a;
+  --text: #f0efec;
+  --muted: #a3a19b;
+  --faint: #8a8781;
+  --subtle: #757369;
+  --hoverbg: #292926;
+  --field: #161615;
+  --divider: #2a2a27;
+  --chipborder: #3b3b37;
+  --chiptext: #b5b3ac;
+  --ink: #f0efec;
+  --inktext: #131312;
+  --track: #3b3b37;
+  --dotoff: #55534e;
+}
+.settings-scope ::selection,
+.settings-scope::selection {
+  background: var(--ink);
+  color: var(--inktext);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

@@ -1,0 +1,63 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: lumi
+      - generic [ref=e8]: /
+      - generic [ref=e9]: Settings
+    - link "← Back to reading" [ref=e10] [cursor=pointer]:
+      - /url: /
+  - generic [ref=e11]:
+    - navigation [ref=e12]:
+      - generic [ref=e13]: Settings
+      - generic [ref=e14]:
+        - button "API Keys" [ref=e15] [cursor=pointer]
+        - button "Usage" [ref=e23] [cursor=pointer]
+        - button "Models" [ref=e27] [cursor=pointer]
+        - button "General" [ref=e31] [cursor=pointer]
+      - generic [ref=e37]:
+        - generic [ref=e38]: Keys stay on-device
+        - generic [ref=e39]: Your API keys are stored locally in your browser and sent only to each provider.
+    - main [ref=e40]:
+      - generic [ref=e41]:
+        - heading "API Keys" [level=1] [ref=e42]
+        - paragraph [ref=e43]: Connect your own model providers. Lumi uses these keys to define words and answer your follow-up questions — pick a default under Models.
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]:
+              - generic [ref=e47]:
+                - generic [ref=e48]: C
+                - generic [ref=e49]:
+                  - generic [ref=e50]: Claude
+                  - generic [ref=e51]: Anthropic
+              - generic [ref=e52]: Not set
+            - generic [ref=e54]:
+              - textbox "Claude API key" [ref=e55]:
+                - /placeholder: sk-ant-api03-…
+              - button "Show / hide" [ref=e56] [cursor=pointer]
+          - generic [ref=e60]:
+            - generic [ref=e61]:
+              - generic [ref=e62]:
+                - generic [ref=e63]: G
+                - generic [ref=e64]:
+                  - generic [ref=e65]: GPT-4o
+                  - generic [ref=e66]: OpenAI
+              - generic [ref=e67]: Not set
+            - generic [ref=e69]:
+              - textbox "GPT-4o API key" [ref=e70]:
+                - /placeholder: sk-…
+              - button "Show / hide" [ref=e71] [cursor=pointer]
+          - generic [ref=e75]:
+            - generic [ref=e76]:
+              - generic [ref=e77]:
+                - generic [ref=e78]: G
+                - generic [ref=e79]:
+                  - generic [ref=e80]: Gemini
+                  - generic [ref=e81]: Google DeepMind
+              - generic [ref=e82]: Not set
+            - generic [ref=e84]:
+              - textbox "Gemini API key" [ref=e85]:
+                - /placeholder: AIza…
+              - button "Show / hide" [ref=e86] [cursor=pointer]
+        - generic [ref=e90]:
+          - generic [ref=e91]: Keys are stored only in this browser.
+          - button "Save changes" [ref=e92] [cursor=pointer]
