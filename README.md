@@ -41,15 +41,22 @@ The card follows your system theme automatically, or force Light/Dark from the s
 
 ## Installation
 
-Not yet on the Chrome Web Store — load it unpacked:
+### Chrome / Edge / Brave / Arc
 
-1. Clone this repo:
-   ```sh
-   git clone https://github.com/Yi-99/lumi.git
-   ```
-2. Open `chrome://extensions` in Chrome (or any Chromium browser).
+*Chrome Web Store listing coming soon.* Until then, install from a release zip:
+
+1. Download `lumi-chrome-vX.Y.Z.zip` from the [latest release](https://github.com/Yi-99/lumi/releases/latest) and unzip it (or clone this repo and use the `extension/` folder directly).
+2. Open `chrome://extensions` (or `edge://extensions`).
 3. Enable **Developer mode** (top right).
-4. Click **Load unpacked** and select the `lumi/frontend` folder.
+4. Click **Load unpacked** and select the unzipped folder.
+
+### Firefox
+
+*addons.mozilla.org listing coming soon.* Release Firefox only permanently installs signed add-ons, so until the AMO listing is live you can load it temporarily:
+
+1. Download `lumi-firefox-vX.Y.Z.zip` from the [latest release](https://github.com/Yi-99/lumi/releases/latest).
+2. Open `about:debugging#/runtime/this-firefox`.
+3. Click **Load Temporary Add-on…** and pick the zip (removed when Firefox restarts).
 
 ## Setup — bring your own API keys
 
@@ -67,7 +74,7 @@ Click the extension icon (or open its options page) and paste a key for at least
 
 The settings page also shows **per-provider token usage** (input/output tokens and lookup count, parsed from each provider's own streaming usage reports) with a reset button — so you can see what each key is costing you.
 
-Untick a provider's checkbox to disable it without deleting the key. Keys are encrypted at rest with AES-GCM-256 (non-extractable WebCrypto master key, see [frontend/vault.js](frontend/vault.js)), stay on this device, and are sent **only** to each provider's official API endpoint — or, if you enable it, through the optional local proxy below.
+Untick a provider's checkbox to disable it without deleting the key. Keys are encrypted at rest with AES-GCM-256 (non-extractable WebCrypto master key, see [extension/vault.js](extension/vault.js)), stay on this device, and are sent **only** to each provider's official API endpoint — or, if you enable it, through the optional local proxy below.
 
 ## Optional local proxy server
 
@@ -119,21 +126,22 @@ No build step — plain JavaScript (Manifest V3) plus an optional Python backend
 
 ```
 lumi/
-├── frontend/        # Chrome extension — "Load unpacked" points here
-└── backend/           # optional FastAPI proxy (dockerized)
+├── extension/       # the browser extension — "Load unpacked" points here
+├── frontend/        # marketing/landing website (React + Vite)
+└── backend/         # optional FastAPI proxy (dockerized)
 ```
 
 | File | Role |
 |---|---|
-| [frontend/content.js](frontend/content.js) | Selection detection + the card UI (rendered in a shadow DOM so page CSS can't touch it) |
-| [frontend/background.js](frontend/background.js) | MV3 service worker: fans out to providers (directly or via the proxy), parses SSE, relays chunks over a `Port` |
-| [frontend/vault.js](frontend/vault.js) | AES-GCM-256 encrypted key storage |
-| [frontend/options.html](frontend/options.html) / [frontend/options.js](frontend/options.js) | Setup workflow (keys, per-provider toggles, proxy URL) |
-| [frontend/preview.html](frontend/preview.html) | UI preview harness — open it directly in a browser; `chrome.*` is stubbed and responses are fake streams, so you can iterate on the card without loading the extension or spending tokens |
+| [extension/content.js](extension/content.js) | Selection detection + the card UI (rendered in a shadow DOM so page CSS can't touch it) |
+| [extension/background.js](extension/background.js) | MV3 service worker: fans out to providers (directly or via the proxy), parses SSE, relays chunks over a `Port` |
+| [extension/vault.js](extension/vault.js) | AES-GCM-256 encrypted key storage |
+| [extension/options.html](extension/options.html) / [extension/options.js](extension/options.js) | Setup workflow (keys, per-provider toggles, proxy URL) |
+| [extension/preview.html](extension/preview.html) | UI preview harness — open it directly in a browser; `chrome.*` is stubbed and responses are fake streams, so you can iterate on the card without loading the extension or spending tokens |
 | [backend/app/main.py](backend/app/main.py) | FastAPI app: `/v1/lookup` SSE fan-out, rate limiting, CORS |
 | [backend/app/providers.py](backend/app/providers.py) | httpx streaming adapters for the three provider APIs |
 
-To try the UI without any API keys: open [frontend/preview.html](frontend/preview.html) in a browser and highlight any word on the page.
+To try the UI without any API keys: open [extension/preview.html](extension/preview.html) in a browser and highlight any word on the page.
 
 With [Task](https://taskfile.dev) installed, one command serves the harness on localhost and opens it in a Playwright-controlled browser:
 
@@ -142,6 +150,31 @@ task preview
 ```
 
 The first run downloads Playwright's Chromium build (`task setup` runs automatically). Close the browser window to stop the server.
+
+### Building release zips
+
+```sh
+task build        # or: bash scripts/build.sh
+```
+
+Produces `dist/lumi-chrome-vX.Y.Z.zip` (Chrome Web Store / Edge Add-ons) and `dist/lumi-firefox-vX.Y.Z.zip` (AMO) from the shared source in `extension/`. The Chrome manifest is the source of truth; the Firefox manifest is derived at build time (background event page instead of service worker, plus the gecko id). Needs `jq`, `zip`, and `rsync`.
+
+### Releasing
+
+1. Bump `version` in [extension/manifest.json](extension/manifest.json).
+2. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+3. The [release workflow](.github/workflows/release.yml) builds both zips, lints the Firefox build with `web-ext`, and attaches them to a GitHub Release. Store submissions (Chrome Web Store, AMO) are manual.
+
+### Icons
+
+`extension/icons/lumi.svg` is the icon source; the PNGs are pre-rendered and checked in. To regenerate after editing the SVG:
+
+```sh
+rsvg-convert -w 1024 -h 1024 extension/icons/lumi.svg -o /tmp/lumi-1024.png
+for N in 16 32 48 128; do sips -z $N $N /tmp/lumi-1024.png --out extension/icons/lumi-$N.png; done
+```
+
+(Any SVG rasterizer works — `qlmanage -t -s 1024` on macOS, Inkscape, etc.)
 
 ## License
 

@@ -21,10 +21,16 @@
       "run_at": "document_idle"
     }
   ],
-  "options_page": "options.html",
+  "options_ui": { "page": "options.html", "open_in_tab": true },
   "action": {
     "default_title": "Lumi — open settings",
-    "default_popup": "options.html"
+    "default_popup": "options.html",
+    "default_icon": {
+      "16": "icons/lumi-16.png",
+      "32": "icons/lumi-32.png",
+      "48": "icons/lumi-48.png",
+      "128": "icons/lumi-128.png"
+    }
   },
   "commands": {
     "trigger-lookup": {
@@ -33,9 +39,9 @@
     }
   },
   "icons": {
-    "16": "icons/lumi.svg",
-    "32": "icons/lumi.svg",
-    "48": "icons/lumi.svg",
-    "128": "icons/lumi.svg"
+    "16": "icons/lumi-16.png",
+    "32": "icons/lumi-32.png",
+    "48": "icons/lumi-48.png",
+    "128": "icons/lumi-128.png"
   }
 }

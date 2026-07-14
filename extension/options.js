@@ -3,6 +3,9 @@
 // Saved keys are never echoed back into the DOM — the field shows a masked
 // placeholder and an "encrypted ✓" chip instead.
 
+// Firefox: promise-style chrome.* lives on browser.*; alias it over.
+if (typeof browser !== "undefined") globalThis.chrome = browser;
+
 const PROVIDERS = [
   { field: "anthropicKey", flag: "claudeEnabled", test: testAnthropic },
   { field: "openaiKey", flag: "gptEnabled", test: testOpenAI },

@@ -4,7 +4,12 @@
 // {type:"chunk", provider, text} and {type:"done"|"error", provider, ...}.
 // API keys live encrypted-at-rest in the vault (see vault.js).
 
-importScripts("vault.js");
+// Firefox: promise-style chrome.* lives on browser.*; alias it over.
+if (typeof browser !== "undefined") globalThis.chrome = browser;
+
+// Chrome MV3 service worker only; Firefox loads vault.js via manifest
+// background.scripts instead.
+if (typeof importScripts === "function") importScripts("vault.js");
 
 const PROVIDERS = {
   claude: {

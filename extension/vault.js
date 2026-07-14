@@ -13,6 +13,9 @@
 //     decrypt, and malware running as your OS user can defeat any
 //     browser-level protection. Defense-in-depth, not an HSM.
 
+// Firefox: promise-style chrome.* lives on browser.*; alias it over.
+if (typeof browser !== "undefined") globalThis.chrome = browser;
+
 const VAULT_DB = "llm-lookup-vault";
 const VAULT_STORE = "keys";
 const MASTER_ID = "master-v1";

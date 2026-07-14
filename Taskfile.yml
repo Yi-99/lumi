@@ -6,6 +6,11 @@ vars:
   PLAYWRIGHT: 'playwright@1.61.1'
 
 tasks:
+  build:
+    desc: Package Chrome + Firefox release zips into dist/
+    cmds:
+      - bash scripts/build.sh
+
   setup:
     desc: Download the Playwright Chromium build (one-time, idempotent)
     cmds:
@@ -24,7 +29,7 @@ tasks:
         # clear any stale server left on the port by a previous run
         # (task's built-in shell has no usable $!, so we manage the server by port)
         lsof -ti :{{.PORT}} | xargs kill 2>/dev/null || true
-        python3 -m http.server {{.PORT}} --bind 127.0.0.1 --directory frontend >/dev/null 2>&1 &
+        python3 -m http.server {{.PORT}} --bind 127.0.0.1 --directory extension >/dev/null 2>&1 &
         # wait until the server actually responds before opening the browser
         ok=""
         for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25; do

@@ -1,5 +1,7 @@
 // content.js — selection → Lookup-style card (shadow DOM, page-CSS-proof)
 (() => {
+  // Firefox: promise-style chrome.* lives on browser.*; alias it over.
+  if (typeof browser !== "undefined") globalThis.chrome = browser;
   let host = null; // <div> host element carrying the shadow root
   let port = null; // chrome.runtime Port for the in-flight lookup
   let state = null; // { providers, answers, doneCount, firstDone, activeTab }
