@@ -26,7 +26,8 @@ Click **Compare all** to see every model's answer in one view:
 
 ### Follow up, copy, dismiss
 
-- **Follow up** — ask a question about the selection; all models re-answer.
+- **Follow up** — ask a question about the selection; the card becomes a thread: earlier answers stay visible above, the new answer streams in below, and the input stays open for the next question. Switching model pills switches the whole thread.
+- **History** — see your past prompts (lookups and follow-up questions). Requires the local proxy server, which saves each prompt to its SQLite database via `POST /v1/prompts`.
 - **Copy** — copies the active answer (or all answers in compare view).
 - <kbd>Esc</kbd>, scrolling, or clicking outside dismisses the card.
 
@@ -48,7 +49,7 @@ Not yet on the Chrome Web Store — load it unpacked:
    ```
 2. Open `chrome://extensions` in Chrome (or any Chromium browser).
 3. Enable **Developer mode** (top right).
-4. Click **Load unpacked** and select the `lumi/extension` folder.
+4. Click **Load unpacked** and select the `lumi/frontend` folder.
 
 ## Setup — bring your own API keys
 
@@ -66,11 +67,11 @@ Click the extension icon (or open its options page) and paste a key for at least
 
 The settings page also shows **per-provider token usage** (input/output tokens and lookup count, parsed from each provider's own streaming usage reports) with a reset button — so you can see what each key is costing you.
 
-Untick a provider's checkbox to disable it without deleting the key. Keys are encrypted at rest with AES-GCM-256 (non-extractable WebCrypto master key, see [extension/vault.js](extension/vault.js)), stay on this device, and are sent **only** to each provider's official API endpoint — or, if you enable it, through the optional local proxy below.
+Untick a provider's checkbox to disable it without deleting the key. Keys are encrypted at rest with AES-GCM-256 (non-extractable WebCrypto master key, see [frontend/vault.js](frontend/vault.js)), stay on this device, and are sent **only** to each provider's official API endpoint — or, if you enable it, through the optional local proxy below.
 
 ## Optional local proxy server
 
-A dockerized FastAPI backend in [server/](server/) can handle the provider fan-out server-side. It's optional — the extension calls providers directly when no proxy is configured, and silently falls back to direct mode if the server is down.
+A dockerized FastAPI backend in [backend/](backend/) can handle the provider fan-out server-side. It's optional — the extension calls providers directly when no proxy is configured, and silently falls back to direct mode if the server is down.
 
 ```sh
 docker compose up --build     # or: task server
@@ -81,7 +82,7 @@ Then set **Local proxy server** to `http://localhost:8000` (or your chosen port)
 
 - One `POST /v1/lookup` request; the server queries all providers concurrently (asyncio + httpx) and streams a single merged SSE response whose events are exactly the extension's internal message format.
 - **Fully standalone** — the server runs on *your* machine; there is no cloud component and nothing anyone else maintains.
-- Dev-grade only: per-IP rate limiting (30 req/min), no auth. Don't expose it beyond localhost without adding authentication (there's a placeholder dependency slot in [server/app/main.py](server/app/main.py)).
+- Dev-grade only: per-IP rate limiting (30 req/min), no auth. Don't expose it beyond localhost without adding authentication (there's a placeholder dependency slot in [backend/app/main.py](backend/app/main.py)).
 
 ### Server-side key storage (optional)
 
@@ -96,6 +97,15 @@ curl -X DELETE localhost:8000/v1/keys/claude
 
 Lookup requests resolve keys as: `X-*-Key` headers first, stored keys as fallback. Lookups never write to the store, and error messages never include key material.
 
+### Prompt history
+
+When a proxy is configured, the extension saves each prompt (the highlighted selection and any follow-up question — not the answers) to the same local SQLite database, and the card's **History** button lists them:
+
+```sh
+curl localhost:8000/v1/prompts           # newest first, ?limit=1..200
+curl -X DELETE localhost:8000/v1/prompts # clear history
+```
+
 The server is managed with [uv](https://docs.astral.sh/uv/) (`pyproject.toml` + `uv.lock`); the Docker build uses `uv sync --frozen`, so installs are reproducible.
 
 ## Usage tips
@@ -109,21 +119,21 @@ No build step — plain JavaScript (Manifest V3) plus an optional Python backend
 
 ```
 lumi/
-├── extension/        # Chrome extension — "Load unpacked" points here
-└── server/           # optional FastAPI proxy (dockerized)
+├── frontend/        # Chrome extension — "Load unpacked" points here
+└── backend/           # optional FastAPI proxy (dockerized)
 ```
 
 | File | Role |
 |---|---|
-| [extension/content.js](extension/content.js) | Selection detection + the card UI (rendered in a shadow DOM so page CSS can't touch it) |
-| [extension/background.js](extension/background.js) | MV3 service worker: fans out to providers (directly or via the proxy), parses SSE, relays chunks over a `Port` |
-| [extension/vault.js](extension/vault.js) | AES-GCM-256 encrypted key storage |
-| [extension/options.html](extension/options.html) / [extension/options.js](extension/options.js) | Setup workflow (keys, per-provider toggles, proxy URL) |
-| [extension/preview.html](extension/preview.html) | UI preview harness — open it directly in a browser; `chrome.*` is stubbed and responses are fake streams, so you can iterate on the card without loading the extension or spending tokens |
-| [server/app/main.py](server/app/main.py) | FastAPI app: `/v1/lookup` SSE fan-out, rate limiting, CORS |
-| [server/app/providers.py](server/app/providers.py) | httpx streaming adapters for the three provider APIs |
+| [frontend/content.js](frontend/content.js) | Selection detection + the card UI (rendered in a shadow DOM so page CSS can't touch it) |
+| [frontend/background.js](frontend/background.js) | MV3 service worker: fans out to providers (directly or via the proxy), parses SSE, relays chunks over a `Port` |
+| [frontend/vault.js](frontend/vault.js) | AES-GCM-256 encrypted key storage |
+| [frontend/options.html](frontend/options.html) / [frontend/options.js](frontend/options.js) | Setup workflow (keys, per-provider toggles, proxy URL) |
+| [frontend/preview.html](frontend/preview.html) | UI preview harness — open it directly in a browser; `chrome.*` is stubbed and responses are fake streams, so you can iterate on the card without loading the extension or spending tokens |
+| [backend/app/main.py](backend/app/main.py) | FastAPI app: `/v1/lookup` SSE fan-out, rate limiting, CORS |
+| [backend/app/providers.py](backend/app/providers.py) | httpx streaming adapters for the three provider APIs |
 
-To try the UI without any API keys: open [extension/preview.html](extension/preview.html) in a browser and highlight any word on the page.
+To try the UI without any API keys: open [frontend/preview.html](frontend/preview.html) in a browser and highlight any word on the page.
 
 With [Task](https://taskfile.dev) installed, one command serves the harness on localhost and opens it in a Playwright-controlled browser:
 

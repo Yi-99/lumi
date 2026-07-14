@@ -1,8 +1,9 @@
-"""Local SQLite key store.
+"""Local SQLite store: API keys + prompt history.
 
-Lets the server run fully standalone: keys saved once via /v1/keys live in a
-single SQLite file inside the docker volume (default /data/lumi.db) on the
-machine that runs the server — no cloud component anywhere.
+Lets the server run fully standalone: keys saved once via /v1/keys and the
+prompt history saved via /v1/prompts live in a single SQLite file inside the
+docker volume (default /data/lumi.db) on the machine that runs the server —
+no cloud component anywhere.
 
 Storage is plaintext-on-own-disk, the same trust model as ~/.aws/credentials:
 the file is chmod 0600 and never leaves the volume. Encrypting it with a key
@@ -27,6 +28,15 @@ def _conn() -> sqlite3.Connection:
         "  provider TEXT PRIMARY KEY,"
         "  key TEXT NOT NULL,"
         "  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"
+        ")"
+    )
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS prompts ("
+        "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "  kind TEXT NOT NULL CHECK (kind IN ('lookup', 'followup')),"
+        "  selection TEXT NOT NULL,"
+        "  question TEXT,"
+        "  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"
         ")"
     )
     if created:
@@ -60,3 +70,33 @@ def status() -> dict[str, bool]:
     """Which providers have a stored key — never exposes key material."""
     stored = get_keys()
     return {p: p in stored for p in PROVIDER_IDS}
+
+
+# ---------- Prompt history ----------
+
+
+def add_prompt(kind: str, selection: str, question: str | None) -> int:
+    with _conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO prompts (kind, selection, question) VALUES (?, ?, ?)",
+            (kind, selection, question),
+        )
+        return cur.lastrowid
+
+
+def list_prompts(limit: int = 50) -> list[dict]:
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT id, kind, selection, question, created_at "
+            "FROM prompts ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+    return [
+        {"id": r[0], "kind": r[1], "selection": r[2], "question": r[3], "created_at": r[4]}
+        for r in rows
+    ]
+
+
+def clear_prompts() -> int:
+    with _conn() as conn:
+        return conn.execute("DELETE FROM prompts").rowcount

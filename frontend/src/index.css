@@ -1,0 +1,103 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-night-950: #070a16;
+  --color-night-900: #0b1020;
+  --color-night-800: #131a33;
+  --color-night-700: #1e2547;
+  --color-indigo-brand: #312e81;
+  --color-glow: #fde047;
+  --color-amber-core: #f59e0b;
+  --color-paper: #fcfbf7;
+  --color-ink: #1a1a1a;
+  --color-mist: #a8aecb;
+  --color-fog: #e9ebf5;
+
+  --font-display: 'Bricolage Grotesque', 'Schibsted Grotesk', system-ui, sans-serif;
+  --font-sans: 'Schibsted Grotesk', system-ui, sans-serif;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --animate-twinkle: twinkle 4s ease-in-out infinite;
+  --animate-card-in: card-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+  --animate-caret: caret 1s steps(1) infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes caret {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-night-900);
+  color: var(--color-fog);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The product's core gesture: text selection glows like a highlighter. */
+::selection {
+  background: var(--color-glow);
+  color: var(--color-ink);
+}
+
+/* Highlighter mark used in headlines — slightly rotated block of amber
+   behind the word, like a swipe of a real highlighter. */
+.hl-mark {
+  position: relative;
+  white-space: nowrap;
+}
+.hl-mark::before {
+  content: '';
+  position: absolute;
+  inset: 0.08em -0.12em -0.02em -0.12em;
+  background: linear-gradient(100deg, var(--color-glow), var(--color-amber-core));
+  border-radius: 0.15em;
+  transform: rotate(-0.6deg);
+  z-index: -1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

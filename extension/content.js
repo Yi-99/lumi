@@ -62,6 +62,12 @@
     .fu input { background: #1f1f1d; border-color: rgba(255,255,255,0.25); }
     .col { border-color: rgba(255,255,255,0.08); }
     .err { color: #f09595; }
+    .fq { background: rgba(255,255,255,0.07); color: #b8b8b4; }
+    .ans.past { border-color: rgba(255,255,255,0.08); }
+    .hist { border-color: rgba(255,255,255,0.10); }
+    .hrow:hover { background: rgba(255,255,255,0.04); }
+    .hrow { border-color: rgba(255,255,255,0.06); }
+    .hq, .hempty, .hdate { color: #8a8a86; }
   `;
 
   // ---------- Trigger: mouseup on a selection (word/phrase) ----------
@@ -117,6 +123,8 @@
       compare: false,
       buf: {},
       finished: {},
+      thread: [], // completed exchanges: { question|null, answers: {id: text} }
+      currentQuestion: null, // null = the original definition
     };
 
     host = document.createElement("div");
@@ -231,6 +239,34 @@
         }
         .fu input:focus { border-color: rgba(0,0,0,0.45); }
         .err { color: #a32d2d; }
+        /* Follow-up thread: past question bubbles + past answers */
+        .fq {
+          font-size: 12px; font-weight: 500; color: #555;
+          background: rgba(0,0,0,0.05); border-radius: 8px;
+          padding: 6px 10px; margin: 12px 0 8px;
+        }
+        .fq:first-child { margin-top: 0; }
+        .ans.past {
+          border-bottom: 0.5px solid rgba(0,0,0,0.08);
+          padding-bottom: 12px; margin-bottom: 2px; min-height: 0;
+        }
+        /* History panel: past prompts fetched from the local proxy */
+        .hist {
+          display: none; max-height: 240px; overflow-y: auto;
+          border-top: 0.5px solid rgba(0,0,0,0.10); padding: 4px 0;
+        }
+        .hrow {
+          display: flex; flex-direction: column; gap: 2px;
+          padding: 7px 14px; font-size: 12px;
+          border-bottom: 0.5px solid rgba(0,0,0,0.05);
+        }
+        .hrow:last-child { border-bottom: none; }
+        .hrow:hover { background: rgba(0,0,0,0.03); }
+        .htop { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+        .hsel { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .hdate { color: #999; font-size: 11px; flex: none; }
+        .hq { color: #666; }
+        .hempty { padding: 10px 14px; font-size: 12px; color: #999; }
         @media (prefers-color-scheme: dark) {
           :host(:not([data-theme="light"])) { ${DARK_RULES} }
         }
@@ -248,9 +284,11 @@
         <div class="ftr">
           <button class="btn" data-act="compare">Compare all</button>
           <button class="btn" data-act="followup">Follow up</button>
+          <button class="btn" data-act="history">History</button>
           <button class="copy gear" data-act="settings" title="Settings" aria-label="Open settings">${GEAR_SVG}</button>
         </div>
         <div class="fu"><input type="text" placeholder="Ask a follow-up about this…" /></div>
+        <div class="hist" role="list" aria-label="Past prompts"></div>
       </div>
       <!-- In-flow spacer: stretches the page's scroll area past the card so
            there's always a gap below it (margins don't extend scroll area). -->
@@ -269,10 +307,11 @@
   }
 
   // ---------- Streaming wiring ----------
-  function startLookup(selection, context, promptOverride) {
+  function startLookup(selection, context, promptOverride, question) {
     port = chrome.runtime.connect({ name: "lookup" });
     port.onMessage.addListener(onPortMessage);
-    port.postMessage({ type: "lookup", selection, context, promptOverride });
+    // question rides along so the background can save it to prompt history
+    port.postMessage({ type: "lookup", selection, context, promptOverride, question });
   }
 
   function onPortMessage(msg) {
@@ -404,8 +443,14 @@
     const copyBtn = (id, label) =>
       `<button class="copy" data-copy="${id}" title="Copy" aria-label="Copy ${label} answer">${CLIP_SVG}</button>`;
 
+    // Current question bubble (null while showing the original definition)
+    const curQ = state.currentQuestion
+      ? `<div class="fq">${esc(state.currentQuestion)}</div>`
+      : "";
+
     if (state.compare) {
-      body.innerHTML = `<div class="cols">${state.providers
+      // Compare shows the current exchange only, side by side
+      body.innerHTML = `${curQ}<div class="cols">${state.providers
         .map(
           (p) => `
         <div class="col">
@@ -418,7 +463,17 @@
       const id = state.activeTab;
       const label = state.providers.find((p) => p.id === id)?.label || "";
       const streaming = state.status[id] === "streaming";
+      // Thread transcript: past exchanges for the active provider, then the
+      // current (possibly still streaming) one.
+      const past = state.thread
+        .map(
+          (ex) => `
+        ${ex.question ? `<div class="fq">${esc(ex.question)}</div>` : ""}
+        <div class="ans past">${esc(ex.answers[id] || "…")}</div>`
+        )
+        .join("");
       body.innerHTML = `
+        ${past}${curQ}
         <div class="ans">${esc(state.answers[id] || "")}${
         streaming ? '<span class="caret"></span>' : ""
       }</div>
@@ -458,7 +513,22 @@
     if (act === "followup") {
       const fu = root.querySelector(".fu");
       fu.style.display = fu.style.display === "block" ? "none" : "block";
+      root.querySelector(".hist").style.display = "none";
       fu.querySelector("input").focus();
+    }
+    if (act === "history") {
+      const hist = root.querySelector(".hist");
+      if (hist.style.display === "block") {
+        hist.style.display = "none";
+        return;
+      }
+      root.querySelector(".fu").style.display = "none";
+      hist.style.display = "block";
+      hist.innerHTML = `<div class="hempty">Loading…</div>`;
+      chrome.runtime.sendMessage({ type: "get-history" }, (resp) => {
+        if (!host) return; // card dismissed while fetching
+        renderHistory(host.shadowRoot.querySelector(".hist"), resp);
+      });
     }
     if (act === "settings") {
       btn.classList.add("spin");
@@ -487,8 +557,15 @@
 
   function runFollowUp(selection, question) {
     const root = host.shadowRoot;
-    root.querySelector(".fu").style.display = "none";
-    // Reset answers, keep pills; re-query with the follow-up as prompt override
+    // Snapshot the finished exchange into the transcript (flush any text
+    // still queued in the typewriter buffer so nothing is lost).
+    const answers = {};
+    for (const p of state.providers)
+      answers[p.id] = (state.answers[p.id] || "") + (state.buf[p.id] || "");
+    state.thread.push({ question: state.currentQuestion, answers });
+    state.currentQuestion = question;
+
+    // Reset the live exchange, keep pills
     for (const p of state.providers) {
       state.answers[p.id] = "";
       state.buf[p.id] = "";
@@ -499,13 +576,59 @@
     state.t0 = performance.now();
     setCompare(false);
     root.querySelector('[data-act="compare"]').textContent = "Compare all";
+
+    // Chat-like: the input stays open and focused for the next question
+    const input = root.querySelector(".fu input");
+    input.value = "";
+    input.focus();
+
     port?.disconnect();
     startLookup(
       selection,
       "",
-      `Regarding "${selection}": ${question}\nAnswer in 2-3 sentences.`
+      `Regarding "${selection}": ${question}\nAnswer in 2-3 sentences.`,
+      question
     );
     render();
+  }
+
+  // ---------- History panel (past prompts from the local proxy's SQLite) ----------
+  function renderHistory(hist, resp) {
+    if (!resp?.ok) {
+      hist.innerHTML = `<div class="hempty">${
+        resp?.reason === "no-proxy"
+          ? "History needs the local proxy server — set its URL in Settings."
+          : "Can't reach the local proxy server."
+      }</div>`;
+      return;
+    }
+    if (!resp.prompts?.length) {
+      hist.innerHTML = `<div class="hempty">No past prompts yet.</div>`;
+      return;
+    }
+    hist.innerHTML = resp.prompts
+      .map(
+        (p) => `
+      <div class="hrow" role="listitem">
+        <div class="htop">
+          <span class="hsel">${esc(p.selection)}</span>
+          <span class="hdate">${esc(fmtWhen(p.created_at))}</span>
+        </div>
+        ${p.question ? `<div class="hq">${esc(p.question)}</div>` : ""}
+      </div>`
+      )
+      .join("");
+  }
+
+  function fmtWhen(s) {
+    // SQLite CURRENT_TIMESTAMP: "YYYY-MM-DD HH:MM:SS" in UTC
+    const d = new Date(String(s).replace(" ", "T") + "Z");
+    if (isNaN(d)) return "";
+    return (
+      d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
+      " " +
+      d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
+    );
   }
 
   function esc(s) {

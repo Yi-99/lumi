@@ -44,7 +44,7 @@ chrome.runtime.onConnect.addListener((port) => {
 
   port.onMessage.addListener(async (msg) => {
     if (msg.type !== "lookup") return;
-    const { selection, context, promptOverride } = msg;
+    const { selection, context, promptOverride, question } = msg;
     const flags = await chrome.storage.sync.get(null); // non-secret toggles
     const secrets = await vaultGetAll(); // decrypted only in worker memory
     const prompt = promptOverride || buildPrompt(selection, context);
@@ -61,6 +61,7 @@ chrome.runtime.onConnect.addListener((port) => {
     // Optional local proxy (FastAPI server, see server/). Pre-stream failure
     // (server down, non-2xx) falls back silently to direct provider calls.
     const proxyUrl = (flags.proxyUrl || "").trim();
+    if (proxyUrl) savePrompt(proxyUrl, selection, question); // fire-and-forget history
     if (proxyUrl) {
       try {
         await runProxy(proxyUrl, prompt, enabled, secrets, port);
@@ -287,11 +288,46 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 // Content script's "no keys" card asks us to open the settings page.
-chrome.runtime.onMessage.addListener((msg) => {
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   // Always a fresh tab (openOptionsPage would reuse/focus an existing one)
   if (msg?.type === "open-options")
     chrome.tabs.create({ url: chrome.runtime.getURL("options.html") });
+
+  // Card's History panel: fetch past prompts from the local proxy server.
+  // (Fetched here, not in the content script, so the request isn't subject
+  // to the page's CSP/CORS.)
+  if (msg?.type === "get-history") {
+    (async () => {
+      const { proxyUrl = "" } = await chrome.storage.sync.get("proxyUrl");
+      const url = proxyUrl.trim();
+      if (!url) return sendResponse({ ok: false, reason: "no-proxy" });
+      try {
+        const res = await fetch(url.replace(/\/+$/, "") + "/v1/prompts?limit=50");
+        if (!res.ok) throw new Error(String(res.status));
+        sendResponse({ ok: true, prompts: await res.json() });
+      } catch (_) {
+        sendResponse({ ok: false, reason: "unreachable" });
+      }
+    })();
+    return true; // keep the message channel open for the async response
+  }
 });
+
+// ---------- Prompt history (saved server-side when a proxy is configured) ----------
+
+function savePrompt(proxyUrl, selection, question) {
+  fetch(proxyUrl.replace(/\/+$/, "") + "/v1/prompts", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      kind: question ? "followup" : "lookup",
+      selection: selection.slice(0, 400),
+      question: question ? question.slice(0, 500) : null,
+    }),
+  }).catch(() => {
+    /* history is best-effort — never block or fail a lookup over it */
+  });
+}
 
 // Keyboard shortcut — tell the active tab to trigger lookup on selection
 chrome.commands?.onCommand.addListener(async (command) => {

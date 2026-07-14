@@ -2,14 +2,14 @@
 # slowapi uses in-memory per-process storage — keep a single uvicorn worker.
 services:
   server:
-    build: ./server
+    build: ./backend
     ports:
       # Host port configurable: LUMI_PORT=8010 docker compose up
       - "${LUMI_PORT:-8000}:8000"
     volumes:
-      - ./server/app:/app/app
-      # Local SQLite key store (see server/app/db.py) — survives rebuilds,
-      # stays on this machine.
+      - ./backend/app:/app/app
+      # Local SQLite store (keys + prompt history, see backend/app/db.py) —
+      # survives rebuilds, stays on this machine.
       - lumi-data:/data
     command: uv run --frozen --no-sync uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 

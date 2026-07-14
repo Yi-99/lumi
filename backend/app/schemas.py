@@ -25,3 +25,11 @@ class KeysIn(BaseModel):
     claude: str | None = Field(default=None, min_length=8, max_length=400)
     gpt: str | None = Field(default=None, min_length=8, max_length=400)
     gemini: str | None = Field(default=None, min_length=8, max_length=400)
+
+
+class PromptIn(BaseModel):
+    """POST /v1/prompts body — one history entry."""
+
+    kind: Literal["lookup", "followup"] = "lookup"
+    selection: str = Field(min_length=1, max_length=400)
+    question: str | None = Field(default=None, min_length=1, max_length=500)

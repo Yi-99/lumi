@@ -1,0 +1,97 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - navigation "Main" [ref=f1e5]:
+      - generic [ref=f1e6]:
+        - link "lumi" [ref=f1e7] [cursor=pointer]:
+          - /url: /
+        - generic [ref=f1e12]:
+          - link "Features" [ref=f1e13] [cursor=pointer]:
+            - /url: /#features
+          - link "Install" [ref=f1e14] [cursor=pointer]:
+            - /url: /#install
+          - link "Privacy Policy" [ref=f1e15] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms of Service" [ref=f1e16] [cursor=pointer]:
+            - /url: /terms
+          - link "GitHub" [ref=f1e17] [cursor=pointer]:
+            - /url: https://github.com/Yi-99/lumi
+  - main [ref=f1e20]:
+    - article [ref=f1e23]:
+      - generic [ref=f1e24]:
+        - heading "Privacy Policy" [level=1] [ref=f1e25]
+        - paragraph [ref=f1e26]: "Last updated: July 14, 2026"
+      - generic [ref=f1e27]:
+        - paragraph [ref=f1e29]: lumi is a browser extension that runs entirely on your device. It has no cloud service, no accounts, no analytics, and no telemetry. This policy describes what the extension processes, where that data goes, and what stays on your machine.
+        - generic [ref=f1e30]:
+          - heading "The short version" [level=2] [ref=f1e31]
+          - list [ref=f1e32]:
+            - listitem [ref=f1e33]: We operate no servers and receive no data from you — ever.
+            - listitem [ref=f1e34]: Text you highlight is sent directly to the AI providers you enable (Anthropic, OpenAI, Google), and to no one else.
+            - listitem [ref=f1e35]: Your API keys are encrypted and stored only on your device.
+            - listitem [ref=f1e36]: The optional proxy server and its history database run on your own hardware.
+        - generic [ref=f1e37]:
+          - heading "What lumi processes" [level=2] [ref=f1e38]
+          - paragraph [ref=f1e39]:
+            - text: When you highlight text (or press the keyboard shortcut), lumi sends your selection
+            - emphasis [ref=f1e40]: plus its surrounding paragraph
+            - text: to each AI provider you have enabled, so the answer can be grounded in context. If you ask a follow-up question, that question and the thread context are sent the same way. Nothing is sent anywhere until you make a selection or ask a question.
+        - generic [ref=f1e41]:
+          - heading "Your API keys" [level=2] [ref=f1e42]
+          - paragraph [ref=f1e43]: lumi works with API keys you supply. Keys are encrypted at rest with AES-GCM-256 behind a non-extractable WebCrypto master key, stored in the extension’s local storage on this device only. They are never synced between browsers, and they are transmitted only to the corresponding provider’s official API endpoint — or, if you configure one, to your own local proxy server. You can delete a key at any time from the settings page.
+        - generic [ref=f1e44]:
+          - heading "Token usage statistics" [level=2] [ref=f1e45]
+          - paragraph [ref=f1e46]: The settings page shows per-provider token counts and lookup totals. These numbers are parsed from each provider’s own streaming responses and stored locally. They never leave your device, and you can reset them at any time.
+        - generic [ref=f1e47]:
+          - heading "The optional local proxy" [level=2] [ref=f1e48]
+          - paragraph [ref=f1e49]: "You can run an optional proxy server (included in the repository) that handles the provider fan-out. It runs on your own machine; there is no hosted version. If you use it:"
+          - list [ref=f1e50]:
+            - listitem [ref=f1e51]:
+              - text: Prompts you look up (the highlighted selection and any follow-up questions — not the answers) are saved to a SQLite database on your machine, to power the card’s History view. Clear it any time with
+              - code [ref=f1e52]: DELETE /v1/prompts
+              - text: .
+            - listitem [ref=f1e53]:
+              - text: You may optionally store API keys in that same local database instead of sending them with each request. Stored keys never appear in API responses or error messages, and can be removed with
+              - code [ref=f1e54]: DELETE /v1/keys/<provider>
+              - text: .
+        - generic [ref=f1e55]:
+          - heading "Third-party providers" [level=2] [ref=f1e56]
+          - paragraph [ref=f1e57]:
+            - text: "Text sent to a provider is handled under that provider’s own terms and privacy policy:"
+            - link "Anthropic" [ref=f1e58] [cursor=pointer]:
+              - /url: https://www.anthropic.com/privacy
+            - text: ","
+            - link "OpenAI" [ref=f1e59] [cursor=pointer]:
+              - /url: https://openai.com/privacy
+            - text: ", and"
+            - link "Google" [ref=f1e60] [cursor=pointer]:
+              - /url: https://policies.google.com/privacy
+            - text: . lumi only contacts the providers you have enabled in settings.
+        - generic [ref=f1e61]:
+          - heading "What we don’t do" [level=2] [ref=f1e62]
+          - list [ref=f1e63]:
+            - listitem [ref=f1e64]: No lumi-operated servers, accounts, or sign-ins.
+            - listitem [ref=f1e65]: No analytics, tracking pixels, or crash reporting.
+            - listitem [ref=f1e66]: No selling, sharing, or aggregating of any data — we never have it.
+            - listitem [ref=f1e67]: No reading of pages you visit; lumi only acts on text you select.
+        - generic [ref=f1e68]:
+          - heading "Removing your data" [level=2] [ref=f1e69]
+          - paragraph [ref=f1e70]: Delete keys and reset usage stats from the settings page. If you used the local proxy, clear its history database or delete its Docker volume. Uninstalling the extension removes everything it stored in the browser.
+        - generic [ref=f1e71]:
+          - heading "Changes and contact" [level=2] [ref=f1e72]
+          - paragraph [ref=f1e73]:
+            - text: If this policy changes, the update will appear on this page with a new date. Questions or concerns? Open an issue on
+            - link "GitHub" [ref=f1e74] [cursor=pointer]:
+              - /url: https://github.com/Yi-99/lumi/issues
+            - text: .
+  - contentinfo [ref=f1e75]:
+    - generic [ref=f1e76]:
+      - generic [ref=f1e77]:
+        - generic [ref=f1e81]: lumi
+        - generic [ref=f1e82]: — Lookup for LLMs · MIT License
+      - generic [ref=f1e83]:
+        - link "GitHub" [ref=f1e84] [cursor=pointer]:
+          - /url: https://github.com/Yi-99/lumi
+        - link "Privacy Policy" [ref=f1e85] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms of Service" [ref=f1e86] [cursor=pointer]:
+          - /url: /terms

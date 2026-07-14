@@ -26,7 +26,7 @@ from slowapi.util import get_remote_address
 
 from . import db
 from .providers import ADAPTERS
-from .schemas import KeysIn, LookupRequest, ProviderSpec
+from .schemas import KeysIn, LookupRequest, PromptIn, ProviderSpec
 
 KEY_HEADERS = {
     "claude": "x-anthropic-key",
@@ -143,6 +143,32 @@ async def delete_key(request: Request, response: Response, provider: str) -> dic
         raise HTTPException(status_code=404, detail="unknown provider")
     db.delete_key(provider)
     return db.status()
+
+
+# ---------- Prompt history (local SQLite, see db.py) ----------
+
+
+@app.post("/v1/prompts", dependencies=[Depends(auth_placeholder)])
+@limiter.limit("60/minute")
+async def add_prompt(request: Request, response: Response, body: PromptIn) -> dict:
+    """Save one prompt the user asked (invoked by the extension per lookup)."""
+    pid = db.add_prompt(body.kind, body.selection.strip(), body.question)
+    return {"id": pid}
+
+
+@app.get("/v1/prompts", dependencies=[Depends(auth_placeholder)])
+@limiter.limit("60/minute")
+async def get_prompts(
+    request: Request, response: Response, limit: int = 50
+) -> list[dict]:
+    """Most recent prompts, newest first."""
+    return db.list_prompts(max(1, min(limit, 200)))
+
+
+@app.delete("/v1/prompts", dependencies=[Depends(auth_placeholder)])
+@limiter.limit("30/minute")
+async def clear_prompts(request: Request, response: Response) -> dict:
+    return {"deleted": db.clear_prompts()}
 
 
 @app.post("/v1/lookup", dependencies=[Depends(auth_placeholder)])

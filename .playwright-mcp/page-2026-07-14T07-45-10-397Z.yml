@@ -1,0 +1,176 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation "Main" [ref=e5]:
+      - generic [ref=e6]:
+        - link "lumi" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e12]:
+          - link "Features" [ref=e13] [cursor=pointer]:
+            - /url: /#features
+          - link "Install" [ref=e14] [cursor=pointer]:
+            - /url: /#install
+          - link "Privacy Policy" [ref=e15] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms of Service" [ref=e16] [cursor=pointer]:
+            - /url: /terms
+          - link "GitHub" [ref=e17] [cursor=pointer]:
+            - /url: https://github.com/Yi-99/lumi
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - paragraph [ref=e23]: Free, open-source Chrome extension
+        - heading "Highlight anything. Understand it in place." [level=1] [ref=e27]: Highlight anything.Understand it in place.
+        - paragraph [ref=e28]: lumi puts a macOS Lookup-style card under any text you select, with answers from Claude, GPT-4o, and Gemini streamed side by side. No tab-switching, no pasting into a chat window.
+        - generic [ref=e29]:
+          - link "Install lumi" [ref=e30] [cursor=pointer]:
+            - /url: "#install"
+          - link "View on GitHub" [ref=e31] [cursor=pointer]:
+            - /url: https://github.com/Yi-99/lumi
+      - generic [ref=e32]:
+        - figure "Field Notes · Marine Biology Try it — highlight any word below" [ref=e34]:
+          - generic [ref=e35]:
+            - generic [ref=e36]: Field Notes · Marine Biology
+            - generic [ref=e37]: Try it — highlight any word below
+          - article [ref=e38]:
+            - heading "The ocean makes its own light" [level=3] [ref=e39]
+            - paragraph [ref=e40]: "In the abyssal dark, where sunlight gives out long before the seafloor begins, most of the light that exists is made by the creatures themselves. This is bioluminescence: a chemical reaction in which a molecule called luciferin is oxidized with the help of the enzyme luciferase, releasing energy as cold light instead of heat."
+            - paragraph [ref=e41]: Animals put the glow to remarkably practical use. The hatchetfish hides by shining — its belly photophores match the faint light from above, a trick known as counterillumination that erases its silhouette from predators below. Nearer the surface, swarms of dinoflagellates flash blue when disturbed, which is why a boat’s wake can burn like a comet on a moonless night.
+        - paragraph [ref=e42]: "This page is the demo: select a word in the article above and a card appears — in the extension, this works on every website, with ⌘⇧L for longer passages."
+    - generic [ref=e44]:
+      - paragraph [ref=e45]: How it works
+      - heading "From selection to answer in one gesture" [level=2] [ref=e46]
+      - list [ref=e47]:
+        - listitem [ref=e48]:
+          - generic [ref=e49]: Step 1
+          - heading "Highlight" [level=3] [ref=e50]
+          - paragraph [ref=e51]: Select a word or phrase on any webpage, or press ⌘⇧L / Ctrl+Shift+L. lumi sends the selection plus its surrounding paragraph, so answers fit the passage — not a generic dictionary entry.
+        - listitem [ref=e52]:
+          - generic [ref=e53]: Step 2
+          - heading "Every model answers at once" [level=3] [ref=e54]
+          - paragraph [ref=e55]: A card pops up under your selection and queries Claude, GPT-4o, and Gemini in parallel, streaming tokens live as each one responds.
+        - listitem [ref=e56]:
+          - generic [ref=e57]: Step 3
+          - heading "Fastest wins the tab" [level=3] [ref=e58]
+          - paragraph [ref=e59]:
+            - text: The first model to finish takes the default tab. Switch models with the pills in the header, or click
+            - emphasis [ref=e60]: Compare all
+            - text: to read every answer side by side.
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]:
+          - paragraph [ref=e65]: Compare
+          - heading "Three answers, one glance" [level=2] [ref=e66]
+          - paragraph [ref=e67]: Click Compare all and every model’s answer lines up in columns. Different models disagree more often than you’d think — lumi makes the disagreement visible instead of hiding it behind one confident voice.
+        - img "Compare view with Claude, GPT-4o, and Gemini answers in three columns" [ref=e69]
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - paragraph [ref=e72]: Dark mode
+          - heading "Made for midnight reading" [level=2] [ref=e73]
+          - paragraph [ref=e74]: The card follows your system theme automatically, or force light or dark from the settings page. Either way it renders in a shadow DOM, so the pages you visit can’t restyle it — and it can’t disturb them.
+        - img "Lookup card in dark mode" [ref=e76]
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - paragraph [ref=e79]: Your keys, your costs
+          - heading "Bring your own API keys" [level=2] [ref=e80]
+          - paragraph [ref=e81]: Paste a key for at least one provider and untick the ones you don’t want without deleting anything. The usage meter shows tokens in, tokens out, and lookup counts per provider, with a reset button.
+        - img "Settings popup with API key fields for Claude, GPT-4o, and Gemini" [ref=e83]
+    - generic [ref=e85]:
+      - paragraph [ref=e86]: Everything else
+      - heading "Small card, complete tool" [level=2] [ref=e87]
+      - generic [ref=e88]:
+        - generic [ref=e89]:
+          - heading "Follow-up threads" [level=3] [ref=e90]
+          - paragraph [ref=e91]: Ask a question about the selection and the card becomes a thread — earlier answers stay visible while the new one streams in below.
+        - generic [ref=e92]:
+          - heading "Prompt history" [level=3] [ref=e93]
+          - paragraph [ref=e94]: With the optional local proxy running, every lookup and follow-up is saved to a SQLite database on your machine, browsable from the card.
+        - generic [ref=e95]:
+          - heading "Encrypted key vault" [level=3] [ref=e96]
+          - paragraph [ref=e97]: API keys are encrypted at rest with AES-GCM-256 behind a non-extractable WebCrypto master key. They never sync and never leave your device.
+        - generic [ref=e98]:
+          - heading "Token usage meter" [level=3] [ref=e99]
+          - paragraph [ref=e100]: The settings page tallies input and output tokens per provider, parsed from each provider’s own streaming usage reports — so you know what each key costs.
+        - generic [ref=e101]:
+          - heading "Optional local proxy" [level=3] [ref=e102]
+          - paragraph [ref=e103]: A dockerized FastAPI server can handle the provider fan-out on your machine. If it’s down, the extension silently falls back to direct calls.
+        - generic [ref=e104]:
+          - heading "No build, no cloud" [level=3] [ref=e105]
+          - paragraph [ref=e106]: "Plain JavaScript, Manifest V3, MIT licensed. There is no lumi server: your selections go straight to the providers you enable, and nowhere else."
+    - generic [ref=e114]:
+      - heading "Your keys never leave your machine" [level=2] [ref=e115]
+      - paragraph [ref=e116]: Keys are encrypted at rest and sent only to each provider’s official API endpoint. There is no lumi cloud, no analytics, and no tracking — the optional proxy and its history database run on your own hardware.
+      - link "Read the privacy policy" [ref=e117] [cursor=pointer]:
+        - /url: /privacy
+    - generic [ref=e119]:
+      - paragraph [ref=e120]: Install
+      - heading "Load it unpacked, add a key, done" [level=2] [ref=e121]
+      - paragraph [ref=e122]: lumi isn’t on the Chrome Web Store yet — it takes about two minutes to load in Chrome or any Chromium browser.
+      - generic [ref=e123]:
+        - list [ref=e124]:
+          - listitem [ref=e125]:
+            - generic [ref=e126]: "1"
+            - generic [ref=e127]:
+              - text: "Clone the repository:"
+              - code [ref=e128]: git clone https://github.com/Yi-99/lumi.git
+          - listitem [ref=e129]:
+            - generic [ref=e130]: "2"
+            - generic [ref=e131]:
+              - text: Open
+              - code [ref=e132]: chrome://extensions
+              - text: and turn on
+              - strong [ref=e133]: Developer mode
+              - text: (top right).
+          - listitem [ref=e134]:
+            - generic [ref=e135]: "3"
+            - generic [ref=e136]:
+              - text: Click
+              - strong [ref=e137]: Load unpacked
+              - text: and select the
+              - code [ref=e138]: lumi/extension
+              - text: folder.
+          - listitem [ref=e139]:
+            - generic [ref=e140]: "4"
+            - generic [ref=e141]: Click the extension icon and paste an API key for at least one provider. Highlight something — that’s it.
+        - table [ref=e143]:
+          - rowgroup [ref=e144]:
+            - row [ref=e145]:
+              - columnheader "Provider" [ref=e146]
+              - columnheader "Key looks like" [ref=e147]
+              - columnheader "Get a key" [ref=e148]
+          - rowgroup [ref=e149]:
+            - row [ref=e150]:
+              - cell "Claude claude-sonnet-4-6" [ref=e151]:
+                - text: Claude
+                - generic [ref=e152]: claude-sonnet-4-6
+              - cell "sk-ant-…" [ref=e153]
+              - cell [ref=e154]:
+                - link "console.anthropic.com" [ref=e155] [cursor=pointer]:
+                  - /url: https://console.anthropic.com/
+            - row [ref=e156]:
+              - cell "GPT-4o gpt-4o-mini" [ref=e157]:
+                - text: GPT-4o
+                - generic [ref=e158]: gpt-4o-mini
+              - cell "sk-…" [ref=e159]
+              - cell [ref=e160]:
+                - link "platform.openai.com" [ref=e161] [cursor=pointer]:
+                  - /url: https://platform.openai.com/api-keys
+            - row [ref=e162]:
+              - cell "Gemini gemini-2.0-flash" [ref=e163]:
+                - text: Gemini
+                - generic [ref=e164]: gemini-2.0-flash
+              - cell "AIza…" [ref=e165]
+              - cell [ref=e166]:
+                - link "aistudio.google.com" [ref=e167] [cursor=pointer]:
+                  - /url: https://aistudio.google.com/apikey
+  - contentinfo [ref=e168]:
+    - generic [ref=e169]:
+      - generic [ref=e170]:
+        - generic [ref=e174]: lumi
+        - generic [ref=e175]: — Lookup for LLMs · MIT License
+      - generic [ref=e176]:
+        - link "GitHub" [ref=e177] [cursor=pointer]:
+          - /url: https://github.com/Yi-99/lumi
+        - link "Privacy Policy" [ref=e178] [cursor=pointer]:
+          - /url: /privacy
+        - link "Terms of Service" [ref=e179] [cursor=pointer]:
+          - /url: /terms

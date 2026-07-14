@@ -78,7 +78,17 @@
       },
       runtime: {
         onMessage: { addListener() {} },
-        sendMessage(msg) { console.log("[stub] sendMessage", msg); },
+        sendMessage(msg, cb) {
+          console.log("[stub] sendMessage", msg);
+          if (msg?.type === "get-history" && cb) {
+            // Fake prompt history, newest first (as the real backend returns)
+            setTimeout(() => cb({ ok: true, prompts: [
+              { id: 3, kind: "followup", selection: "Voynichese", question: "Who tried to decode it?", created_at: "2026-07-13 20:10:05" },
+              { id: 2, kind: "lookup", selection: "Zipf's law", question: null, created_at: "2026-07-13 20:09:12" },
+              { id: 1, kind: "lookup", selection: "Voynichese", question: null, created_at: "2026-07-13 20:08:44" },
+            ] }), 250);
+          }
+        },
         connect() {
           const listeners = [];
           let dead = false;
