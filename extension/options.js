@@ -12,12 +12,37 @@ const PROVIDERS = [
 async function refresh() {
   await migrateLegacyKeys(); // no-op unless upgrading from plaintext version
   const stored = await vaultStatus();
-  const flags = await chrome.storage.sync.get(PROVIDERS.map((p) => p.flag));
+  const flags = await chrome.storage.sync.get([
+    ...PROVIDERS.map((p) => p.flag),
+    "proxyUrl",
+    "theme",
+  ]);
   for (const p of PROVIDERS) {
     document.getElementById(p.flag).checked = flags[p.flag] !== false;
     setChip(p.field, stored.includes(p.field));
   }
+  document.getElementById("proxyUrl").value = flags.proxyUrl || "";
+  document.getElementById("theme").value = flags.theme || "system";
+  applyPageTheme(flags.theme || "system");
 }
+
+// ---------- Theme (shared with the lookup card via chrome.storage.sync) ----------
+
+const systemDark = matchMedia("(prefers-color-scheme: dark)");
+systemDark.addEventListener("change", () =>
+  applyPageTheme(document.getElementById("theme").value)
+);
+
+function applyPageTheme(theme) {
+  const dark = theme === "dark" || (theme !== "light" && systemDark.matches);
+  document.documentElement.classList.toggle("dark", dark);
+}
+
+// Instant apply + persist; the content script live-updates any open card
+document.getElementById("theme").addEventListener("change", async (e) => {
+  applyPageTheme(e.target.value);
+  await chrome.storage.sync.set({ theme: e.target.value });
+});
 
 function setChip(field, saved) {
   const input = document.getElementById(field);
@@ -43,6 +68,8 @@ document.getElementById("save").addEventListener("click", async () => {
       input.value = ""; // don't keep the plaintext in the DOM
     }
   }
+  // URL, not a secret — sync storage, not the vault
+  flagsOut.proxyUrl = document.getElementById("proxyUrl").value.trim();
   await chrome.storage.sync.set(flagsOut);
   await refresh();
   const s = document.getElementById("saved");

@@ -58,29 +58,78 @@ chrome.runtime.onConnect.addListener((port) => {
       return;
     }
 
+    // Optional local proxy (FastAPI server, see server/). Pre-stream failure
+    // (server down, non-2xx) falls back silently to direct provider calls.
+    const proxyUrl = (flags.proxyUrl || "").trim();
+    if (proxyUrl) {
+      try {
+        await runProxy(proxyUrl, prompt, enabled, secrets, port);
+        return;
+      } catch (_) {
+        /* fall through to direct mode */
+      }
+    }
+
     safePost(port, {
       type: "providers",
       providers: enabled.map(([id, p]) => ({ id, label: p.label })),
     });
-
-    enabled.forEach(([id, p]) => {
-      const t0 = performance.now();
-      p.stream(prompt, secrets[p.keyName], p.model, (text) =>
-        safePost(port, { type: "chunk", provider: id, text })
-      )
-        .then(() =>
-          safePost(port, {
-            type: "done",
-            provider: id,
-            ms: Math.round(performance.now() - t0),
-          })
-        )
-        .catch((err) =>
-          safePost(port, { type: "error", provider: id, message: String(err) })
-        );
-    });
+    runDirect(enabled, prompt, secrets, port);
   });
 });
+
+function runDirect(enabled, prompt, secrets, port) {
+  enabled.forEach(([id, p]) => {
+    const t0 = performance.now();
+    p.stream(prompt, secrets[p.keyName], p.model, (text) =>
+      safePost(port, { type: "chunk", provider: id, text })
+    )
+      .then(() =>
+        safePost(port, {
+          type: "done",
+          provider: id,
+          ms: Math.round(performance.now() - t0),
+        })
+      )
+      .catch((err) =>
+        safePost(port, { type: "error", provider: id, message: String(err) })
+      );
+  });
+}
+
+// Route the whole lookup through the proxy: one POST, one SSE stream whose
+// data payloads ARE the Port message shapes — forward them verbatim.
+const KEY_HEADERS = {
+  claude: "x-anthropic-key",
+  gpt: "x-openai-key",
+  gemini: "x-gemini-key",
+};
+
+async function runProxy(proxyUrl, prompt, enabled, secrets, port) {
+  const headers = { "content-type": "application/json" };
+  for (const [id, p] of enabled) headers[KEY_HEADERS[id]] = secrets[p.keyName];
+  const res = await fetch(proxyUrl.replace(/\/+$/, "") + "/v1/lookup", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      prompt,
+      max_tokens: 300,
+      providers: enabled.map(([id, p]) => ({ id, label: p.label, model: p.model })),
+    }),
+  });
+  if (!res.ok) throw new Error(`proxy ${res.status}`);
+
+  // Post synthetic errors for providers left hanging if the stream drops
+  // before their done/error arrives, so pills don't spin forever.
+  const settled = new Set();
+  await readSSE(res, (data) => {
+    if (data.type === "done" || data.type === "error") settled.add(data.provider);
+    safePost(port, data);
+  });
+  for (const [id] of enabled)
+    if (!settled.has(id))
+      safePost(port, { type: "error", provider: id, message: "proxy stream interrupted" });
+}
 
 function safePost(port, msg) {
   try {
@@ -191,7 +240,9 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 // Content script's "no keys" card asks us to open the settings page.
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg?.type === "open-options") chrome.runtime.openOptionsPage();
+  // Always a fresh tab (openOptionsPage would reuse/focus an existing one)
+  if (msg?.type === "open-options")
+    chrome.tabs.create({ url: chrome.runtime.getURL("options.html") });
 });
 
 // Keyboard shortcut — tell the active tab to trigger lookup on selection

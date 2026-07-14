@@ -51,20 +51,28 @@
     border-radius: 8px; padding: 8px 10px; margin-top: 18px; line-height: 1.5;
   }
   .warn strong { font-weight: 600; }
-  @media (prefers-color-scheme: dark) {
-    body { background: #1f1f1d; color: #ececea; }
-    .steps { color: #b8b8b4; }
-    .steps strong { color: #ececea; }
-    .chip { background: rgba(255,255,255,0.08); color: #a8a8a4; }
-    .chip.ok { background: #2c3d1c; color: #a4d46e; }
-    input[type="password"] { background: #262624; color: #ececea; border-color: rgba(255,255,255,0.25); }
-    .mini { border-color: rgba(255,255,255,0.25); color: #ececea; }
-    .mini:hover { background: rgba(255,255,255,0.06); }
-    .mini.ok { color: #a4d46e; border-color: #a4d46e; }
-    .mini.bad { color: #f09595; border-color: #f09595; }
-    #save { background: #ececea; color: #1a1a1a; border-color: #ececea; }
-    .warn { background: #292926; color: #b8b8b4; }
+  select {
+    font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px;
+    border: 0.5px solid rgba(0,0,0,0.22); background: #fff; color: inherit;
   }
+  select:focus { outline: none; border-color: rgba(0,0,0,0.45); }
+  .theme-row { display: flex; align-items: center; justify-content: space-between; }
+
+  /* Dark palette. The .dark class is resolved by options.js from the saved
+     theme ("system" tracks prefers-color-scheme live). */
+  :root.dark body { background: #1f1f1d; color: #ececea; }
+  :root.dark .steps { color: #b8b8b4; }
+  :root.dark .steps strong { color: #ececea; }
+  :root.dark .chip { background: rgba(255,255,255,0.08); color: #a8a8a4; }
+  :root.dark .chip.ok { background: #2c3d1c; color: #a4d46e; }
+  :root.dark input[type="password"] { background: #262624; color: #ececea; border-color: rgba(255,255,255,0.25); }
+  :root.dark .mini { border-color: rgba(255,255,255,0.25); color: #ececea; }
+  :root.dark .mini:hover { background: rgba(255,255,255,0.06); }
+  :root.dark .mini.ok { color: #a4d46e; border-color: #a4d46e; }
+  :root.dark .mini.bad { color: #f09595; border-color: #f09595; }
+  :root.dark #save { background: #ececea; color: #1a1a1a; border-color: #ececea; }
+  :root.dark .warn { background: #292926; color: #b8b8b4; }
+  :root.dark select { background: #262624; color: #ececea; border-color: rgba(255,255,255,0.25); }
 </style>
 </head>
 <body>
@@ -116,6 +124,23 @@
     </div>
   </div>
 
+  <div class="row">
+    <div class="row-head">
+      <label for="proxyUrl">Local proxy server <span style="font-weight:400;color:#999">(optional)</span></label>
+    </div>
+    <input type="text" id="proxyUrl" placeholder="http://localhost:8000 — empty = call providers directly" autocomplete="off"
+      style="width:100%;box-sizing:border-box;font:inherit;font-size:13px;padding:8px 10px;border-radius:8px;border:0.5px solid rgba(0,0,0,0.22);background:inherit;color:inherit;" />
+  </div>
+
+  <div class="row theme-row">
+    <label for="theme">Theme</label>
+    <select id="theme" title="Card and settings appearance">
+      <option value="system">System (auto)</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
+  </div>
+
   <button id="save">Save</button><span class="saved" id="saved">Saved — encrypted</span>
 
   <p class="warn">
@@ -123,7 +148,9 @@
     and keys are sent only to the provider they belong to. At rest, keys are encrypted with
     AES-GCM-256 before storage; the master key is a non-extractable browser key whose raw
     bytes are never exposed to JavaScript. Keys stay on this device (never synced in
-    plaintext). No browser extension can protect keys from malware running on your OS.
+    plaintext). If a local proxy server is configured, keys are forwarded per-request in
+    headers and relayed to the providers — the server never stores or logs them. No browser
+    extension can protect keys from malware running on your OS.
   </p>
 
   <script src="vault.js"></script>

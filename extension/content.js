@@ -20,6 +20,49 @@
     '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
   const CHECK_SVG =
     '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  const GEAR_SVG =
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+  // ---------- Theme (system | light | dark), set from the options page ----------
+  let theme = "system";
+  chrome.storage?.sync?.get("theme")?.then((v) => {
+    theme = v?.theme || "system";
+    applyTheme();
+  });
+  chrome.storage?.onChanged?.addListener((changes, area) => {
+    if (area === "sync" && changes.theme) {
+      theme = changes.theme.newValue || "system";
+      applyTheme(); // live-update an open card
+    }
+  });
+
+  function applyTheme() {
+    if (!host) return;
+    if (theme === "system") delete host.dataset.theme;
+    else host.dataset.theme = theme;
+  }
+
+  // Dark palette, applied two ways: via prefers-color-scheme unless the user
+  // forced light, and unconditionally when the user forced dark.
+  const DARK_RULES = `
+    .card { background: #262624; color: #ececea;
+      border-color: rgba(255,255,255,0.14);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    .hdr, .ftr { border-color: rgba(255,255,255,0.10); }
+    .ftr { background: #1f1f1d; }
+    .pill { border-color: rgba(255,255,255,0.25); color: #b8b8b4; }
+    .pill.on { background: #ececea; color: #1a1a1a; border-color: #ececea; }
+    .btn { border-color: rgba(255,255,255,0.25); color: #ececea; }
+    .btn:hover { background: rgba(255,255,255,0.06); }
+    .meta, .col .lbl { color: #8a8a86; }
+    .copy { color: #8a8a86; }
+    .copy:hover { background: rgba(255,255,255,0.08); color: #ececea; }
+    .caret { background: rgba(255,255,255,0.4); }
+    .ans.skeleton::after { background: rgba(255,255,255,0.08); }
+    .fu input { background: #1f1f1d; border-color: rgba(255,255,255,0.25); }
+    .col { border-color: rgba(255,255,255,0.08); }
+    .err { color: #f09595; }
+  `;
 
   // ---------- Trigger: mouseup on a selection (word/phrase) ----------
   document.addEventListener("mouseup", (e) => {
@@ -86,6 +129,7 @@
     state.baseLeft = Math.max(8, left);
     host.style.left = `${state.baseLeft}px`;
     document.documentElement.appendChild(host);
+    applyTheme();
 
     const root = host.attachShadow({ mode: "open" });
     root.innerHTML = `
@@ -163,6 +207,11 @@
         }
         .copy:hover { background: rgba(0,0,0,0.06); color: #1a1a1a; }
         .copy:active { transform: scale(0.94); }
+        .gear { margin-left: auto; }
+        .gear svg { display: block; }
+        @keyframes gearspin { to { transform: rotate(180deg); } }
+        .gear.spin svg { animation: gearspin 0.45s ease; }
+        @media (prefers-reduced-motion: reduce) { .gear.spin svg { animation: none; } }
         .lblrow {
           display: flex; align-items: center; justify-content: space-between;
           margin-bottom: 6px;
@@ -183,24 +232,9 @@
         .fu input:focus { border-color: rgba(0,0,0,0.45); }
         .err { color: #a32d2d; }
         @media (prefers-color-scheme: dark) {
-          .card { background: #262624; color: #ececea;
-            border-color: rgba(255,255,255,0.14);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-          .hdr, .ftr { border-color: rgba(255,255,255,0.10); }
-          .ftr { background: #1f1f1d; }
-          .pill { border-color: rgba(255,255,255,0.25); color: #b8b8b4; }
-          .pill.on { background: #ececea; color: #1a1a1a; border-color: #ececea; }
-          .btn { border-color: rgba(255,255,255,0.25); color: #ececea; }
-          .btn:hover { background: rgba(255,255,255,0.06); }
-          .meta, .col .lbl { color: #8a8a86; }
-          .copy { color: #8a8a86; }
-          .copy:hover { background: rgba(255,255,255,0.08); color: #ececea; }
-          .caret { background: rgba(255,255,255,0.4); }
-          .ans.skeleton::after { background: rgba(255,255,255,0.08); }
-          .fu input { background: #1f1f1d; border-color: rgba(255,255,255,0.25); }
-          .col { border-color: rgba(255,255,255,0.08); }
-          .err { color: #f09595; }
+          :host(:not([data-theme="light"])) { ${DARK_RULES} }
         }
+        :host([data-theme="dark"]) { ${DARK_RULES} }
       </style>
       <div class="card" role="dialog" aria-label="LLM lookup">
         <div class="hdr">
@@ -214,6 +248,7 @@
         <div class="ftr">
           <button class="btn" data-act="compare">Compare all</button>
           <button class="btn" data-act="followup">Follow up</button>
+          <button class="copy gear" data-act="settings" title="Settings" aria-label="Open settings">${GEAR_SVG}</button>
         </div>
         <div class="fu"><input type="text" placeholder="Ask a follow-up about this…" /></div>
       </div>
@@ -407,12 +442,14 @@
 
   // ---------- Footer actions ----------
   function onFooter(e) {
-    const act = e.target?.dataset?.act;
+    // closest(): the gear button's click target can be its inner SVG
+    const btn = e.target?.closest?.("[data-act]");
+    const act = btn?.dataset.act;
     if (!act) return;
     const root = host.shadowRoot;
     if (act === "compare") {
       setCompare(!state.compare);
-      e.target.textContent = state.compare ? "Single view" : "Compare all";
+      btn.textContent = state.compare ? "Single view" : "Compare all";
       if (state.compare)
         for (const p of state.providers) pillFor(p.id)?.classList.remove("on");
       else if (state.activeTab) pillFor(state.activeTab)?.classList.add("on");
@@ -422,6 +459,15 @@
       const fu = root.querySelector(".fu");
       fu.style.display = fu.style.display === "block" ? "none" : "block";
       fu.querySelector("input").focus();
+    }
+    if (act === "settings") {
+      btn.classList.add("spin");
+      btn.addEventListener(
+        "animationend",
+        () => btn.classList.remove("spin"),
+        { once: true }
+      );
+      chrome.runtime.sendMessage({ type: "open-options" });
     }
   }
 

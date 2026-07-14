@@ -66,7 +66,16 @@
     const START_DELAY = { gemini: 350, claude: 700, gpt: 1000 }; // gemini wins first tab
     const CHUNK_MS = 40;
 
+    // Try themes with ?theme=dark / ?theme=light / ?theme=system
+    const THEME = new URLSearchParams(location.search).get("theme") || "system";
     window.chrome = {
+      storage: {
+        sync: {
+          get: async () => ({ theme: THEME }),
+          set: async () => {},
+        },
+        onChanged: { addListener() {} },
+      },
       runtime: {
         onMessage: { addListener() {} },
         sendMessage(msg) { console.log("[stub] sendMessage", msg); },
