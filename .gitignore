@@ -149,3 +149,6 @@ __pycache__/
 
 # Archives
 *.zip
+
+# Persistent browser profile used by `task settings`
+.lumi-profile/

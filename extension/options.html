@@ -2,178 +2,458 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>Lookup for LLMs — setup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lumi — Settings</title>
 <style>
+  :root {
+    --bg: #f6f5f3;
+    --bar-bg: rgba(246, 245, 243, 0.85);
+    --card: #fff;
+    --border: #eae8e4;
+    --field: #f7f6f4;
+    --field-border: #e6e4df;
+    --hover: #eeece8;
+    --hover-2: #eceae6;
+    --text: #1a1a1a;
+    --muted: #7c7973;
+    --muted-2: #9a978f;
+    --muted-3: #a5a29d;
+    --divider: #eee;
+    --accent: #111;
+    --accent-text: #fff;
+    --track: #dad8d3;
+    --chip-border: #dad8d3;
+    --dot-border: #c8c6c0;
+    --ok: #3b6d11;
+    --bad: #a32d2d;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 30px -24px rgba(0, 0, 0, 0.3);
+  }
+  :root.dark {
+    --bg: #1f1f1d;
+    --bar-bg: rgba(31, 31, 29, 0.85);
+    --card: #262624;
+    --border: #34342f;
+    --field: #1f1f1d;
+    --field-border: #3c3c37;
+    --hover: #31312e;
+    --hover-2: #35352f;
+    --text: #ececea;
+    --muted: #b8b8b4;
+    --muted-2: #8a8a86;
+    --muted-3: #757571;
+    --divider: #34342f;
+    --accent: #ececea;
+    --accent-text: #1a1a1a;
+    --track: #4a4a45;
+    --chip-border: #4a4a45;
+    --dot-border: #5a5a55;
+    --ok: #a4d46e;
+    --bad: #f09595;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 30px -24px rgba(0, 0, 0, 0.7);
+  }
+
+  * { box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #fafaf8; color: #1a1a1a;
-    margin: 0; padding: 24px; width: 400px;
+    margin: 0; min-width: 420px;
+    background: var(--bg); color: var(--text);
+    font-family: 'Helvetica Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
-  h1 { font-size: 15px; font-weight: 500; margin: 0 0 4px; }
-  .sub { font-size: 12px; color: #999; margin: 0 0 16px; }
-  .steps {
-    font-size: 12px; color: #666; line-height: 1.7;
-    margin: 0 0 20px; padding-left: 18px;
+  button { font-family: inherit; }
+  input { font-family: inherit; }
+  input:focus { outline: none; }
+  ::selection { background: var(--accent); color: var(--accent-text); }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--track); border-radius: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* top bar */
+  .topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 20px;
+    padding: 16px 32px;
+    background: var(--bar-bg); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
   }
-  .steps strong { color: #1a1a1a; font-weight: 500; }
-  .row { margin-bottom: 16px; }
-  .row-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  label { font-size: 13px; font-weight: 500; }
-  .chip {
-    font-size: 10px; padding: 1px 7px; border-radius: 999px;
-    background: rgba(0,0,0,0.06); color: #888; margin-right: auto;
+  .brand { font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
+  .brand-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); margin-left: 3px; vertical-align: middle;
   }
-  .chip.ok { background: #e7f0dc; color: #3b6d11; }
-  .krow { display: flex; gap: 6px; }
-  input[type="password"] {
-    flex: 1; box-sizing: border-box; font: inherit; font-size: 13px;
-    padding: 8px 10px; border-radius: 8px;
-    border: 0.5px solid rgba(0,0,0,0.22); background: #fff;
+  .crumb-sep { color: var(--chip-border); }
+  .crumb { font-size: 15px; color: var(--muted); }
+
+  /* layout */
+  .layout {
+    max-width: 1080px; margin: 0 auto; padding: 44px 32px 80px;
+    display: grid; grid-template-columns: 216px 1fr; gap: 44px; align-items: start;
   }
-  input[type="password"]:focus { outline: none; border-color: rgba(0,0,0,0.45); }
-  .mini {
-    font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 8px;
-    border: 0.5px solid rgba(0,0,0,0.22); background: transparent;
-    color: #1a1a1a; cursor: pointer;
+
+  /* sidebar */
+  .sidebar { position: sticky; top: 96px; display: flex; flex-direction: column; gap: 4px; }
+  .nav-title {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted-3); padding: 0 14px 12px;
   }
-  .mini:hover { background: rgba(0,0,0,0.04); }
-  .mini.ok { color: #3b6d11; border-color: #3b6d11; }
-  .mini.bad { color: #a32d2d; border-color: #a32d2d; }
-  #save {
-    font: inherit; font-size: 13px; padding: 7px 14px; border-radius: 8px;
-    border: 0.5px solid #1a1a1a; background: #1a1a1a; color: #fff; cursor: pointer;
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+    border: none; border-radius: 12px; cursor: pointer; text-align: left;
+    font-size: 15px; font-weight: 500; color: var(--muted-2); background: transparent;
+    transition: background 0.2s, color 0.2s;
   }
-  #save:active { transform: scale(0.98); }
-  .saved { font-size: 12px; color: #3b6d11; margin-left: 10px; opacity: 0; transition: opacity 0.2s; }
-  .saved.show { opacity: 1; }
-  .warn {
-    font-size: 11px; color: #555; background: #f1f1ec;
-    border-radius: 8px; padding: 8px 10px; margin-top: 18px; line-height: 1.5;
+  .nav-item:hover { color: var(--text); }
+  .nav-item.active { color: var(--text); background: var(--hover); }
+  .nav-item svg { flex: none; }
+  .aside-card {
+    margin-top: 22px; padding: 16px 14px;
+    border: 1px solid var(--border); border-radius: 14px; background: var(--card);
   }
-  .warn strong { font-weight: 600; }
-  select {
-    font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px;
-    border: 0.5px solid rgba(0,0,0,0.22); background: #fff; color: inherit;
+  .aside-title { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .aside-body { font-size: 12.5px; line-height: 1.5; color: var(--muted-2); }
+
+  /* panels */
+  .panel { display: none; }
+  .panel.active { display: block; }
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .lede { font-size: 15.5px; line-height: 1.55; color: var(--muted); margin: 0 0 28px; max-width: 560px; }
+  .lede strong { color: var(--text); font-weight: 500; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+    padding: 24px; box-shadow: var(--shadow);
   }
-  select:focus { outline: none; border-color: rgba(0,0,0,0.45); }
-  .theme-row { display: flex; align-items: center; justify-content: space-between; }
-  .usage { font-size: 12px; }
+  .card + .card { margin-top: 14px; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .card-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .card-head-row .card-title { margin-bottom: 0; }
+  .hr { height: 1px; background: var(--divider); margin: 24px 0; }
+
+  /* provider cards */
+  .pcards { display: flex; flex-direction: column; gap: 14px; }
+  .pcard {
+    background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+    padding: 22px 24px; box-shadow: var(--shadow);
+  }
+  .pcard-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+  .pcard-id { display: flex; align-items: center; gap: 14px; }
+  .mono-badge {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--accent); color: var(--accent-text);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 17px;
+  }
+  .pname { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .pvendor { font-size: 13px; color: var(--muted-2); }
+  .pstatus { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--muted-3); }
+  .pstatus .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: transparent; border: 1.5px solid var(--dot-border);
+  }
+  .pstatus.ok { color: var(--text); }
+  .pstatus.ok .dot { background: var(--accent); border-color: var(--accent); }
+
+  .field {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--field); border: 1px solid var(--field-border); border-radius: 12px;
+    padding: 0 8px 0 14px; transition: border-color 0.2s;
+  }
+  .field.ok { border-color: var(--accent); }
+  .field input {
+    flex: 1; min-width: 0; border: none; background: transparent; padding: 13px 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 14px; color: var(--text); letter-spacing: 0.02em;
+  }
+  .icon-btn {
+    border: none; background: transparent; cursor: pointer; color: var(--muted-2);
+    padding: 8px; display: inline-flex; border-radius: 8px; transition: 0.2s; flex: none;
+  }
+  .icon-btn:hover { background: var(--hover-2); color: var(--text); }
+  .eye .i-eye-off { display: none; }
+  .eye.shown .i-eye { display: none; }
+  .eye.shown .i-eye-off { display: inline; }
+  .text-btn {
+    border: none; background: transparent; cursor: pointer; color: var(--muted-2);
+    font-size: 13px; font-weight: 500; padding: 8px 10px; border-radius: 8px;
+    transition: 0.2s; flex: none; white-space: nowrap;
+  }
+  .text-btn:hover { background: var(--hover-2); color: var(--text); }
+  .text-btn.ok { color: var(--ok); }
+  .text-btn.bad { color: var(--bad); }
+
+  .save-row {
+    display: flex; justify-content: space-between; align-items: center; gap: 20px;
+    margin-top: 26px; flex-wrap: wrap;
+  }
+  .save-note { font-size: 13.5px; color: var(--muted-2); }
+  .primary-btn {
+    border: none; cursor: pointer; background: var(--accent); color: var(--accent-text);
+    font-size: 14.5px; font-weight: 600; padding: 13px 26px; border-radius: 100px;
+    transition: transform 0.2s;
+  }
+  .primary-btn:hover { transform: translateY(-1px); }
+  .primary-btn:active { transform: scale(0.98); }
+  .fineprint { font-size: 12px; line-height: 1.55; color: var(--muted-2); margin: 22px 0 0; }
+  .fineprint strong { font-weight: 600; color: var(--muted); }
+
+  /* setting rows, switches, chips */
+  .setting-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+  .setting-row .grow { flex: 1; min-width: 0; }
+  .s-name { font-size: 15px; font-weight: 600; }
+  .s-desc { font-size: 13.5px; color: var(--muted-2); margin-top: 3px; line-height: 1.45; }
+  .switch {
+    flex-shrink: 0; width: 48px; height: 28px; border-radius: 100px;
+    background: var(--track); padding: 3px; cursor: pointer; transition: background 0.25s;
+  }
+  .switch .knob {
+    width: 22px; height: 22px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transform: translateX(0); transition: transform 0.25s;
+  }
+  .switch.on { background: var(--accent); }
+  .switch.on .knob { transform: translateX(20px); }
+  :root.dark .switch.on .knob { background: #1a1a1a; }
+  .chip-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip-btn {
+    border: 1px solid var(--chip-border); background: transparent; color: var(--muted);
+    font-size: 14.5px; font-weight: 600; padding: 11px 22px; border-radius: 100px;
+    cursor: pointer; transition: 0.2s;
+  }
+  .chip-btn:hover { border-color: var(--muted); }
+  .chip-btn.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .pill-btn {
+    border: 1px solid var(--chip-border); background: var(--card); color: var(--text);
+    font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 100px;
+    cursor: pointer; transition: 0.2s; white-space: nowrap;
+  }
+  .pill-btn:hover { border-color: var(--accent); background: var(--accent); color: var(--accent-text); }
+
+  .proxy-input {
+    width: 100%; margin-top: 10px;
+    background: var(--field); border: 1px solid var(--field-border); border-radius: 12px;
+    padding: 12px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13.5px; color: var(--text); transition: border-color 0.2s;
+  }
+  .proxy-input:focus { border-color: var(--accent); }
+
+  /* token usage */
+  .usage { font-size: 13.5px; }
   .usage .urow {
-    display: flex; align-items: baseline; gap: 8px;
-    padding: 5px 0; border-bottom: 0.5px solid rgba(0,0,0,0.08);
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid var(--divider);
   }
   .usage .urow:last-child { border-bottom: none; }
-  .usage .uname { font-weight: 500; width: 64px; flex: none; }
-  .usage .unums { color: #666; }
-  .usage .ulook { margin-left: auto; color: #999; }
-  .usage .uempty { color: #999; padding: 4px 0; }
+  .usage .uname { font-weight: 600; width: 72px; flex: none; }
+  .usage .unums { color: var(--muted); }
+  .usage .ulook { margin-left: auto; color: var(--muted-2); }
+  .usage .uempty { color: var(--muted-2); padding: 4px 0; }
 
-  /* Dark palette. The .dark class is resolved by options.js from the saved
-     theme ("system" tracks prefers-color-scheme live). */
-  :root.dark body { background: #1f1f1d; color: #ececea; }
-  :root.dark .steps { color: #b8b8b4; }
-  :root.dark .steps strong { color: #ececea; }
-  :root.dark .chip { background: rgba(255,255,255,0.08); color: #a8a8a4; }
-  :root.dark .chip.ok { background: #2c3d1c; color: #a4d46e; }
-  :root.dark input[type="password"] { background: #262624; color: #ececea; border-color: rgba(255,255,255,0.25); }
-  :root.dark .mini { border-color: rgba(255,255,255,0.25); color: #ececea; }
-  :root.dark .mini:hover { background: rgba(255,255,255,0.06); }
-  :root.dark .mini.ok { color: #a4d46e; border-color: #a4d46e; }
-  :root.dark .mini.bad { color: #f09595; border-color: #f09595; }
-  :root.dark #save { background: #ececea; color: #1a1a1a; border-color: #ececea; }
-  :root.dark .warn { background: #292926; color: #b8b8b4; }
-  :root.dark select { background: #262624; color: #ececea; border-color: rgba(255,255,255,0.25); }
-  :root.dark .usage .urow { border-color: rgba(255,255,255,0.08); }
-  :root.dark .usage .unums { color: #b8b8b4; }
-  :root.dark .usage .ulook, :root.dark .usage .uempty { color: #8a8a86; }
+  /* narrow window / action popup */
+  @media (max-width: 719px) {
+    .topbar { padding: 14px 20px; }
+    .layout { display: block; padding: 22px 20px 48px; }
+    .sidebar { position: static; flex-direction: row; align-items: center; gap: 6px; margin-bottom: 22px; overflow-x: auto; }
+    .nav-title, .aside-card { display: none; }
+    .nav-item { padding: 9px 14px; border-radius: 100px; white-space: nowrap; }
+    h1 { font-size: 22px; }
+    .lede { font-size: 14px; margin-bottom: 18px; }
+    .card, .pcard { padding: 18px; border-radius: 14px; }
+    .pcard-head { margin-bottom: 12px; }
+    .hr { margin: 18px 0; }
+  }
 </style>
 </head>
 <body>
-  <h1>Lookup for LLMs — setup</h1>
-  <p class="sub">Bring your own API keys. One key is enough to start.</p>
+  <header class="topbar">
+    <span class="brand">lumi<span class="brand-dot"></span></span>
+    <span class="crumb-sep">/</span>
+    <span class="crumb">Settings</span>
+  </header>
 
-  <ol class="steps">
-    <li><strong>Paste a key</strong> for any provider below.</li>
-    <li><strong>Test</strong> it, then <strong>Save</strong> — keys are encrypted before they touch disk.</li>
-    <li><strong>Highlight text</strong> on any page (or press ⌘⇧L) to look it up.</li>
-  </ol>
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="nav-title">Settings</div>
+      <button class="nav-item active" data-panel="api">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2"/><path d="m16 6 3 3"/><path d="m18 4 3 3"/></svg>
+        <span>API Keys</span>
+      </button>
+      <button class="nav-item" data-panel="models">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        <span>Models</span>
+      </button>
+      <button class="nav-item" data-panel="general">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>General</span>
+      </button>
+      <div class="aside-card">
+        <div class="aside-title">Keys stay on-device</div>
+        <div class="aside-body">Your API keys are encrypted with AES-GCM-256, stored locally in your browser, and sent only to each provider.</div>
+      </div>
+    </nav>
 
-  <div class="row">
-    <div class="row-head">
-      <label for="anthropicKey">Claude</label>
-      <span class="chip" data-for="anthropicKey">not set</span>
-      <input type="checkbox" id="claudeEnabled" checked title="Enable Claude" />
-    </div>
-    <div class="krow">
-      <input type="password" id="anthropicKey" data-ph="sk-ant-…" placeholder="sk-ant-…" autocomplete="off" />
-      <button class="mini test" data-for="anthropicKey">Test</button>
-      <button class="mini remove" data-for="anthropicKey" style="display:none" title="Delete saved key">✕</button>
-    </div>
+    <main>
+
+      <!-- ===== API KEYS PANEL ===== -->
+      <section class="panel active" id="panel-api">
+        <h1>API Keys</h1>
+        <p class="lede">Connect your own model providers — one key is enough to start. Then highlight text on any page (or press <strong>⌘⇧L</strong>) to look it up. Pick which models answer under <strong>Models</strong>.</p>
+
+        <div class="pcards">
+          <div class="pcard" data-field="anthropicKey">
+            <div class="pcard-head">
+              <div class="pcard-id">
+                <div class="mono-badge">C</div>
+                <div>
+                  <div class="pname">Claude</div>
+                  <div class="pvendor">Anthropic</div>
+                </div>
+              </div>
+              <div class="pstatus"><span class="dot"></span><span class="ptext">Not set</span></div>
+            </div>
+            <div class="field">
+              <input type="password" id="anthropicKey" data-ph="sk-ant-…" placeholder="sk-ant-…" autocomplete="off" />
+              <button class="icon-btn eye" data-for="anthropicKey" title="Show / hide">
+                <svg class="i-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="i-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+              <button class="text-btn test" data-for="anthropicKey">Test</button>
+              <button class="text-btn remove" data-for="anthropicKey" style="display:none" title="Delete saved key">✕</button>
+            </div>
+          </div>
+
+          <div class="pcard" data-field="openaiKey">
+            <div class="pcard-head">
+              <div class="pcard-id">
+                <div class="mono-badge">G</div>
+                <div>
+                  <div class="pname">GPT-4o</div>
+                  <div class="pvendor">OpenAI</div>
+                </div>
+              </div>
+              <div class="pstatus"><span class="dot"></span><span class="ptext">Not set</span></div>
+            </div>
+            <div class="field">
+              <input type="password" id="openaiKey" data-ph="sk-…" placeholder="sk-…" autocomplete="off" />
+              <button class="icon-btn eye" data-for="openaiKey" title="Show / hide">
+                <svg class="i-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="i-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+              <button class="text-btn test" data-for="openaiKey">Test</button>
+              <button class="text-btn remove" data-for="openaiKey" style="display:none" title="Delete saved key">✕</button>
+            </div>
+          </div>
+
+          <div class="pcard" data-field="geminiKey">
+            <div class="pcard-head">
+              <div class="pcard-id">
+                <div class="mono-badge">G</div>
+                <div>
+                  <div class="pname">Gemini</div>
+                  <div class="pvendor">Google DeepMind</div>
+                </div>
+              </div>
+              <div class="pstatus"><span class="dot"></span><span class="ptext">Not set</span></div>
+            </div>
+            <div class="field">
+              <input type="password" id="geminiKey" data-ph="AIza…" placeholder="AIza…" autocomplete="off" />
+              <button class="icon-btn eye" data-for="geminiKey" title="Show / hide">
+                <svg class="i-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="i-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+              <button class="text-btn test" data-for="geminiKey">Test</button>
+              <button class="text-btn remove" data-for="geminiKey" style="display:none" title="Delete saved key">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="save-row">
+          <span class="save-note" id="savedNote">Keys are encrypted before they touch disk.</span>
+          <button id="save" class="primary-btn">Save changes</button>
+        </div>
+
+        <p class="fineprint">
+          <strong>How your keys are protected:</strong> in flight, every request uses HTTPS/TLS
+          and keys are sent only to the provider they belong to. At rest, keys are encrypted with
+          AES-GCM-256 before storage; the master key is a non-extractable browser key whose raw
+          bytes are never exposed to JavaScript. Keys stay on this device (never synced in
+          plaintext). If a local proxy server is configured, keys are forwarded per-request in
+          headers and relayed to the providers — the server never stores or logs them. No browser
+          extension can protect keys from malware running on your OS.
+        </p>
+      </section>
+
+      <!-- ===== MODELS PANEL ===== -->
+      <section class="panel" id="panel-models">
+        <h1>Models</h1>
+        <p class="lede">Choose which models answer your lookups. The fastest enabled model wins the default tab — switch per-lookup from the card.</p>
+
+        <div class="card">
+          <div class="card-title">Enabled models</div>
+          <div class="setting-row">
+            <div>
+              <div class="s-name">Claude</div>
+              <div class="s-desc">claude-sonnet-4-6 · Anthropic</div>
+            </div>
+            <div class="switch" id="claudeEnabled" role="switch" aria-checked="true" tabindex="0" title="Enable Claude"><div class="knob"></div></div>
+          </div>
+          <div class="hr"></div>
+          <div class="setting-row">
+            <div>
+              <div class="s-name">GPT-4o</div>
+              <div class="s-desc">gpt-4o-mini · OpenAI</div>
+            </div>
+            <div class="switch" id="gptEnabled" role="switch" aria-checked="true" tabindex="0" title="Enable GPT-4o"><div class="knob"></div></div>
+          </div>
+          <div class="hr"></div>
+          <div class="setting-row">
+            <div>
+              <div class="s-name">Gemini</div>
+              <div class="s-desc">gemini-2.0-flash · Google DeepMind</div>
+            </div>
+            <div class="switch" id="geminiEnabled" role="switch" aria-checked="true" tabindex="0" title="Enable Gemini"><div class="knob"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head-row">
+            <div class="card-title">Token usage <span style="font-weight:400;color:var(--muted-2)">— this browser</span></div>
+            <button class="pill-btn" id="resetUsage" title="Zero all counters">Reset</button>
+          </div>
+          <div id="usageList" class="usage"></div>
+        </div>
+      </section>
+
+      <!-- ===== GENERAL PANEL ===== -->
+      <section class="panel" id="panel-general">
+        <h1>General</h1>
+        <p class="lede">Appearance, connection, and your lookup history.</p>
+
+        <div class="card">
+          <div class="card-title">Appearance</div>
+          <div class="chip-row" id="themeChips">
+            <button class="chip-btn" data-theme="light">Light</button>
+            <button class="chip-btn" data-theme="dark">Dark</button>
+            <button class="chip-btn" data-theme="system">System</button>
+          </div>
+          <div class="hr"></div>
+          <div class="setting-row">
+            <div class="grow">
+              <div class="s-name">Local proxy server <span style="font-weight:400;color:var(--muted-2)">(optional)</span></div>
+              <div class="s-desc">Route lookups through your own proxy and enable prompt history. Empty = call providers directly.</div>
+              <input type="text" id="proxyUrl" class="proxy-input" placeholder="http://localhost:8000" autocomplete="off" />
+            </div>
+          </div>
+          <div class="hr"></div>
+          <div class="setting-row">
+            <div>
+              <div class="s-name">Clear history</div>
+              <div class="s-desc">Permanently delete all saved prompts from the proxy's database.</div>
+            </div>
+            <button class="pill-btn" id="clearHistory">Clear</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
-
-  <div class="row">
-    <div class="row-head">
-      <label for="openaiKey">GPT-4o</label>
-      <span class="chip" data-for="openaiKey">not set</span>
-      <input type="checkbox" id="gptEnabled" checked title="Enable GPT-4o" />
-    </div>
-    <div class="krow">
-      <input type="password" id="openaiKey" data-ph="sk-…" placeholder="sk-…" autocomplete="off" />
-      <button class="mini test" data-for="openaiKey">Test</button>
-      <button class="mini remove" data-for="openaiKey" style="display:none" title="Delete saved key">✕</button>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="row-head">
-      <label for="geminiKey">Gemini</label>
-      <span class="chip" data-for="geminiKey">not set</span>
-      <input type="checkbox" id="geminiEnabled" checked title="Enable Gemini" />
-    </div>
-    <div class="krow">
-      <input type="password" id="geminiKey" data-ph="AIza…" placeholder="AIza…" autocomplete="off" />
-      <button class="mini test" data-for="geminiKey">Test</button>
-      <button class="mini remove" data-for="geminiKey" style="display:none" title="Delete saved key">✕</button>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="row-head">
-      <label for="proxyUrl">Local proxy server <span style="font-weight:400;color:#999">(optional)</span></label>
-    </div>
-    <input type="text" id="proxyUrl" placeholder="http://localhost:8000 — empty = call providers directly" autocomplete="off"
-      style="width:100%;box-sizing:border-box;font:inherit;font-size:13px;padding:8px 10px;border-radius:8px;border:0.5px solid rgba(0,0,0,0.22);background:inherit;color:inherit;" />
-  </div>
-
-  <div class="row theme-row">
-    <label for="theme">Theme</label>
-    <select id="theme" title="Card and settings appearance">
-      <option value="system">System (auto)</option>
-      <option value="light">Light</option>
-      <option value="dark">Dark</option>
-    </select>
-  </div>
-
-  <div class="row">
-    <div class="row-head">
-      <label>Token usage</label>
-      <span class="chip" style="margin-right:0">this browser</span>
-      <button class="mini" id="resetUsage" title="Zero all counters">Reset</button>
-    </div>
-    <div id="usageList" class="usage"></div>
-  </div>
-
-  <button id="save">Save</button><span class="saved" id="saved">Saved — encrypted</span>
-
-  <p class="warn">
-    <strong>How your keys are protected:</strong> in flight, every request uses HTTPS/TLS
-    and keys are sent only to the provider they belong to. At rest, keys are encrypted with
-    AES-GCM-256 before storage; the master key is a non-extractable browser key whose raw
-    bytes are never exposed to JavaScript. Keys stay on this device (never synced in
-    plaintext). If a local proxy server is configured, keys are forwarded per-request in
-    headers and relayed to the providers — the server never stores or logs them. No browser
-    extension can protect keys from malware running on your OS.
-  </p>
 
   <script src="vault.js"></script>
   <script src="options.js"></script>

@@ -1,7 +1,10 @@
-// options.js — key setup workflow. Secrets go through vault.js (AES-GCM at
-// rest); only the non-secret enable/disable flags use chrome.storage.sync.
+// options.js — settings page logic. Secrets go through vault.js (AES-GCM at
+// rest); the non-secret flags, theme, and proxy URL use chrome.storage.sync.
 // Saved keys are never echoed back into the DOM — the field shows a masked
-// placeholder and an "encrypted ✓" chip instead.
+// placeholder and an "Encrypted ✓" status instead.
+//
+// Everything except keys saves instantly (toggles, theme chips, proxy URL);
+// the Save button seals typed keys into the vault.
 
 // Firefox: promise-style chrome.* lives on browser.*; alias it over.
 if (typeof browser !== "undefined") globalThis.chrome = browser;
@@ -12,6 +15,21 @@ const PROVIDERS = [
   { field: "geminiKey", flag: "geminiEnabled", test: testGemini },
 ];
 
+// ---------- Sidebar tabs ----------
+
+document.querySelectorAll(".nav-item").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll(".nav-item")
+      .forEach((b) => b.classList.toggle("active", b === btn));
+    document
+      .querySelectorAll(".panel")
+      .forEach((p) =>
+        p.classList.toggle("active", p.id === `panel-${btn.dataset.panel}`)
+      );
+  });
+});
+
 async function refresh() {
   await migrateLegacyKeys(); // no-op unless upgrading from plaintext version
   const stored = await vaultStatus();
@@ -21,14 +39,36 @@ async function refresh() {
     "theme",
   ]);
   for (const p of PROVIDERS) {
-    document.getElementById(p.flag).checked = flags[p.flag] !== false;
-    setChip(p.field, stored.includes(p.field));
+    setSwitch(document.getElementById(p.flag), flags[p.flag] !== false);
+    setKeyStatus(p.field, stored.includes(p.field));
   }
   document.getElementById("proxyUrl").value = flags.proxyUrl || "";
-  document.getElementById("theme").value = flags.theme || "system";
+  setThemeChips(flags.theme || "system");
   applyPageTheme(flags.theme || "system");
   await renderUsage();
 }
+
+// ---------- Enable/disable switches (instant save) ----------
+
+function setSwitch(el, on) {
+  el.classList.toggle("on", on);
+  el.setAttribute("aria-checked", String(on));
+}
+
+document.querySelectorAll(".switch").forEach((el) => {
+  const flip = async () => {
+    const on = !el.classList.contains("on");
+    setSwitch(el, on);
+    await chrome.storage.sync.set({ [el.id]: on });
+  };
+  el.addEventListener("click", flip);
+  el.addEventListener("keydown", (e) => {
+    if (e.key === " " || e.key === "Enter") {
+      e.preventDefault();
+      flip();
+    }
+  });
+});
 
 // ---------- Token usage (accumulated by background.js per lookup) ----------
 
@@ -73,38 +113,55 @@ document.getElementById("resetUsage").addEventListener("click", async () => {
 // ---------- Theme (shared with the lookup card via chrome.storage.sync) ----------
 
 const systemDark = matchMedia("(prefers-color-scheme: dark)");
-systemDark.addEventListener("change", () =>
-  applyPageTheme(document.getElementById("theme").value)
-);
+systemDark.addEventListener("change", () => {
+  const active = document.querySelector("#themeChips .chip-btn.active");
+  applyPageTheme(active ? active.dataset.theme : "system");
+});
 
 function applyPageTheme(theme) {
   const dark = theme === "dark" || (theme !== "light" && systemDark.matches);
   document.documentElement.classList.toggle("dark", dark);
 }
 
+function setThemeChips(theme) {
+  document
+    .querySelectorAll("#themeChips .chip-btn")
+    .forEach((b) => b.classList.toggle("active", b.dataset.theme === theme));
+}
+
 // Instant apply + persist; the content script live-updates any open card
-document.getElementById("theme").addEventListener("change", async (e) => {
-  applyPageTheme(e.target.value);
-  await chrome.storage.sync.set({ theme: e.target.value });
+document.querySelectorAll("#themeChips .chip-btn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    setThemeChips(btn.dataset.theme);
+    applyPageTheme(btn.dataset.theme);
+    await chrome.storage.sync.set({ theme: btn.dataset.theme });
+  });
 });
 
-function setChip(field, saved) {
+// ---------- Proxy URL (instant save on change) ----------
+
+document.getElementById("proxyUrl").addEventListener("change", async (e) => {
+  await chrome.storage.sync.set({ proxyUrl: e.target.value.trim() });
+});
+
+// ---------- Key cards ----------
+
+function setKeyStatus(field, saved) {
   const input = document.getElementById(field);
-  const chip = document.querySelector(`.chip[data-for="${field}"]`);
-  chip.textContent = saved ? "encrypted ✓" : "not set";
-  chip.classList.toggle("ok", saved);
+  const card = document.querySelector(`.pcard[data-field="${field}"]`);
+  const status = card.querySelector(".pstatus");
+  status.classList.toggle("ok", saved);
+  status.querySelector(".ptext").textContent = saved ? "Encrypted ✓" : "Not set";
+  card.querySelector(".field").classList.toggle("ok", saved);
   input.placeholder = saved
     ? "••••••••  saved — paste to replace"
     : input.dataset.ph;
-  document.querySelector(`.remove[data-for="${field}"]`).style.display = saved
-    ? ""
-    : "none";
+  card.querySelector(".remove").style.display = saved ? "" : "none";
 }
 
-document.getElementById("save").addEventListener("click", async () => {
-  const flagsOut = {};
+const saveBtn = document.getElementById("save");
+saveBtn.addEventListener("click", async () => {
   for (const p of PROVIDERS) {
-    flagsOut[p.flag] = document.getElementById(p.flag).checked;
     const input = document.getElementById(p.field);
     const v = input.value.trim();
     if (v) {
@@ -113,25 +170,38 @@ document.getElementById("save").addEventListener("click", async () => {
     }
   }
   // URL, not a secret — sync storage, not the vault
-  flagsOut.proxyUrl = document.getElementById("proxyUrl").value.trim();
-  await chrome.storage.sync.set(flagsOut);
+  await chrome.storage.sync.set({
+    proxyUrl: document.getElementById("proxyUrl").value.trim(),
+  });
   await refresh();
-  const s = document.getElementById("saved");
-  s.classList.add("show");
-  setTimeout(() => s.classList.remove("show"), 1800);
+  const note = document.getElementById("savedNote");
+  saveBtn.textContent = "Saved ✓";
+  note.textContent = "Your keys are encrypted and saved on this device.";
+  clearTimeout(saveBtn._t);
+  saveBtn._t = setTimeout(() => {
+    saveBtn.textContent = "Save changes";
+    note.textContent = "Keys are encrypted before they touch disk.";
+  }, 2200);
 });
 
 document.body.addEventListener("click", async (e) => {
-  const field = e.target.dataset?.for;
-  if (!field) return;
+  const btn = e.target.closest("[data-for]");
+  if (!btn) return;
+  const field = btn.dataset.for;
 
-  if (e.target.classList.contains("remove")) {
+  if (btn.classList.contains("eye")) {
+    const input = document.getElementById(field);
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    btn.classList.toggle("shown", show);
+  }
+
+  if (btn.classList.contains("remove")) {
     await vaultSet(field, ""); // delete sealed entry
     await refresh();
   }
 
-  if (e.target.classList.contains("test")) {
-    const btn = e.target;
+  if (btn.classList.contains("test")) {
     const typed = document.getElementById(field).value.trim();
     const key = typed || (await vaultGetAll())[field];
     const p = PROVIDERS.find((x) => x.field === field);
@@ -140,7 +210,12 @@ document.body.addEventListener("click", async (e) => {
     try {
       const status = await p.test(key);
       if (status === 200) setTestResult(btn, true, "✓ valid");
-      else setTestResult(btn, false, status === 401 || status === 403 ? "✗ bad key" : `✗ ${status}`);
+      else
+        setTestResult(
+          btn,
+          false,
+          status === 401 || status === 403 ? "✗ bad key" : `✗ ${status}`
+        );
     } catch (_) {
       setTestResult(btn, false, "✗ network");
     }
@@ -156,6 +231,28 @@ function setTestResult(btn, ok, label) {
       btn.textContent = "Test";
       btn.classList.remove("ok", "bad");
     }, 2500);
+}
+
+// ---------- Clear history (proxy-side prompt store) ----------
+
+document.getElementById("clearHistory").addEventListener("click", async () => {
+  const btn = document.getElementById("clearHistory");
+  const { proxyUrl } = await chrome.storage.sync.get("proxyUrl");
+  if (!proxyUrl) return flashBtn(btn, "Set a proxy first");
+  try {
+    const res = await fetch(`${proxyUrl.replace(/\/+$/, "")}/v1/prompts`, {
+      method: "DELETE",
+    });
+    flashBtn(btn, res.ok ? "Cleared ✓" : `✗ ${res.status}`);
+  } catch (_) {
+    flashBtn(btn, "✗ offline");
+  }
+});
+
+function flashBtn(btn, label) {
+  btn.textContent = label;
+  clearTimeout(btn._t);
+  btn._t = setTimeout(() => (btn.textContent = "Clear"), 2200);
 }
 
 // ---------- Cheap key-validation pings (list-models endpoints) ----------

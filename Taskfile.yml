@@ -11,6 +11,13 @@ tasks:
     cmds:
       - bash scripts/build.sh
 
+  settings:
+    desc: Open the extension's real settings page in Chromium (profile persists in .lumi-profile/)
+    deps: [setup]
+    cmds:
+      - |
+        npx -y -p {{.PLAYWRIGHT}} sh -c 'NODE_PATH="$(dirname "$(command -v playwright)")/.." node scripts/settings.cjs'
+
   setup:
     desc: Download the Playwright Chromium build (one-time, idempotent)
     cmds:
