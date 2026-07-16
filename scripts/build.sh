@@ -22,9 +22,10 @@ VERSION=$(jq -r .version extension/manifest.json)
 rm -rf dist
 mkdir -p dist/chrome dist/firefox
 
-# preview.html is a dev-only harness; never ship it.
-rsync -a --exclude preview.html --exclude '.DS_Store' extension/ dist/chrome/
-rsync -a --exclude preview.html --exclude '.DS_Store' extension/ dist/firefox/
+# preview.html is a dev-only harness and lumi.svg is the icon source
+# (manifests reference the pre-rendered PNGs); never ship either.
+rsync -a --exclude preview.html --exclude 'icons/lumi.svg' --exclude '.DS_Store' extension/ dist/chrome/
+rsync -a --exclude preview.html --exclude 'icons/lumi.svg' --exclude '.DS_Store' extension/ dist/firefox/
 
 # Firefox MV3: background event page (not service worker) + required gecko id.
 jq '
